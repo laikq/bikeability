@@ -220,8 +220,8 @@ def plot_used_nodes(G, trip_nbrs, stations, place, save, width=20, height=20,
                  fontsize=30)
     plt.savefig('plots/{}.png'.format(save), format='png')
 
-    # plt.close('all')
-    plt.show()
+    plt.close('all')
+    # plt.show()
 
 
 def get_polygon_from_json(path_to_json):
