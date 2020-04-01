@@ -97,7 +97,7 @@ def plot_edited_edges(G, place, edited_edges, bike_lane_perc, node_size,
                                 close=False)
         fig.suptitle('Bike Lane Percentage: {0:.0%}'.format(blp[idx]),
                      fontsize='x-large')
-        plt.savefig('plots/evolution/{0:s}-edited-mode-{1:d}{2:}-{3:d}'
+        plt.savefig('plots/evolution/{0:s}-edited-mode-{1:d}{2:}-{3:03d}'
                     '.{4:s}'.format(place, rev, minmode, i, file_format),
                     format='png')
         plt.close(fig)
