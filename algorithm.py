@@ -113,7 +113,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
     if rev:
         total_cost = [0]
     else:
-        total_cost = [get_total_cost(edge_dict, street_cost)]
+        total_cost = [get_total_cost(edge_dict, street_cost,
+                                     bike_lanes_everywhere=True)]
     bike_lane_perc = [bike_lane_percentage(edge_dict)]
     total_real_distance_traveled = [total_len_on_types(trips_dict, 'real')]
     total_felt_distance_traveled = [total_len_on_types(trips_dict, 'felt')]
