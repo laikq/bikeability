@@ -86,9 +86,9 @@ def prep_city(place, which_result, save, by = "polygon"):
         print('Plotting used nodes in polygon.')
         plot_used_nodes(G, trips, stations, save.upper(), save)
         #Save data
-        ox.save_graphml(G, filename='{}_polygon.graphml'.format(save),
+        ox.save_graphml(G, filename='{}.graphml'.format(save),
                     folder='data/algorithm/input')
-        np.save('data/algorithm/input/{}_polygon_demand.npy'.format(save), [trips])        
+        np.save('data/algorithm/input/{}_demand.npy'.format(save), [trips])        
     
     
 
