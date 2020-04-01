@@ -71,7 +71,7 @@ def edit_edge(nkG, edge_dict, edge):
 
 def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                  nk2nx_edges, street_cost, starttime, logfile, place,
-                 minmode, rev, building_budget=10000):
+                 minmode, rev, total_budget=10000, w=0.9):
     """
     Edits the least loaded unedited edge until no unedited edges are left.
     :param nkG: Graph.
@@ -139,6 +139,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
     log_idx = 0
 
     while True:
+        rev = not decide_building(total_budget, w, edge_dict, street_cost)
+
         # Calculate minimal loaded unedited edge:
         min_loaded_edge = get_minimal_loaded_edge(edge_dict, trips_dict,
                                                   minmode=minmode, rev=rev)
@@ -147,7 +149,6 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
             break
         edited_edges.append(min_loaded_edge)
         edited_edges_nx.append(get_nx_edge(min_loaded_edge, nk2nx_edges))
-        nkG_edited.removeEdge(min_loaded_edge[0], min_loaded_edge[1])
         remove_isolated_nodes(nkG_edited)
         # Calculate len of all trips running over min loaded edge.
         len_before = get_len_of_trips_over_edge(min_loaded_edge, edge_dict,
@@ -206,8 +207,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
             save_data(loc, data, logfile, mes)
             log_idx += 1
 
-        if ((rev and total_cost[-1] > building_budget) or
-            (not rev and total_cost[-1] < building_budget)) and not budget_found:
+        if ((rev and total_cost[-1] > total_budget) or
+            (not rev and total_cost[-1] < total_budget)) and not budget_found:
             budget_found = True
             log_to_file(file=logfile, txt='Reached building budget',
                         stamptime=time.localtime(), start=starttime,
@@ -221,7 +222,6 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
             mes = 'Saved at building budget as {}_data_mode_{:d}{}_budget.npy'\
                 .format(place, rev, minmode)
             save_data(loc, data, logfile, mes)
-            log_idx += 1
 
     # Save data of this run to data array
     data = np.array([edited_edges, edited_edges_nx, total_cost, bike_lane_perc,

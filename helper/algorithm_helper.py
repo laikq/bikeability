@@ -357,6 +357,45 @@ def get_len_of_trips_over_edge(edge, edge_list, trips_dict):
     return length
 
 
+def decide_building(total_budget, w, edge_dict, cost):
+    """
+    Monte-Carlo Decision whether to build a bike lane or not. Returns True if a
+    bike lane should be removed, False otherwise. More precisely: Always return
+    True if the total cost of the bike lane network is larger than
+    (2-w)*total_budget, and always False if the total cost of the bike lane
+    network is smaller than w*total_budget. In between these values, the
+    probability to return True depends linearly on the total cost of the bike
+    lane network.
+    :param total_budget: amount of money available in the very beginning
+    :type total_budget: float
+    :param w: Controls how gentle the transition from "always removing"-behavior
+    to "always adding"-behavior should occur: For (1-w) << 1, it occurs very
+    rapidly, and it is the most genlte for w = 0.
+    :type w: float
+    :param edge_dict: Dictionary with all edge information.
+    :type edge_dict: dict of dicts
+    :param cost: Dictionary with cost of edge depending on street type.
+    :type cost: dict
+    :return: decision
+    :rtype: bool
+    """
+    price = get_total_cost(edge_dict, cost)
+    q = np.random.rand()
+    if price <= w * total_budget:
+        p = 1
+    elif price >= (2-w) * total_budget:
+        p = 0
+    else:
+        # linearer Verlauf der Wahrscheinlicheit zwischen w*Budget
+        # und (2-w)*Budget
+        p = 1 - 1/(2*(1-w))*(price/total_budget - w)
+
+    if p < q:
+        return True
+    else:
+        return False
+
+
 def real_trip_length(trip_info, edge_dict):
     """
     Returns the real length og a trip.
