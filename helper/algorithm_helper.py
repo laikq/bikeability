@@ -162,6 +162,20 @@ def get_cost(edge, edge_dict, cost):
     return street_length * cost[street_type]
 
 
+def get_total_cost(edge_dict, cost):
+    """
+    Returns the cost of building bike paths on the whole network. That is, take
+    the sum of get_cost(edge, edge_dict, cost) for all edges in the network.
+    :param edge_dict: Dictionary with all edge information.
+    :type edge_dict: dict of dicts
+    :param cost: Dictionary with cost of edge depending on street type.
+    :type cost: dict
+    :return: Cost of all edges in the network
+    :rtype: float
+    """
+    return sum({get_cost(edge, edge_dict, cost) for edge in edge_dict})
+
+
 def get_trip_edges(edges_dict, trip_nodes):
     """
     Returns the edge sequence of a trip given by its node sequence.
