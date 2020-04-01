@@ -13,7 +13,7 @@ city = 'Hamburg'
 which_result = 2
 
 # save name
-save = 'hh'
+save = 'hh_part'
 
 # logging
 logfile = 'log/algorithm'
