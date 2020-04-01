@@ -23,7 +23,7 @@ def run_city(save, modes, logfile, processes):
 
 
 def main():
-    save = 'hh'
+    save = 'hh_part'
     logfile = 'log/algorithm'
 
     # Number of CPU cores used
