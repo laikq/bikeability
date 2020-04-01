@@ -127,3 +127,17 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Generated plots
+plots/**/*.png
+
+# Generated npy-files
+data/**/*.npy
+
+# Generated graphml-files
+data/**/*.graphml
+
+# Emacs files
+.\#*
+\#*\#
+*~
