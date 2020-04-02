@@ -360,9 +360,9 @@ def get_len_of_trips_over_edge(edge, edge_list, trips_dict):
 def decide_building(total_budget, w, edge_dict, cost):
     """
     Monte-Carlo Decision whether to build a bike lane or not. Returns True if a
-    bike lane should be removed, False otherwise. More precisely: Always return
-    True if the total cost of the bike lane network is larger than
-    (2-w)*total_budget, and always False if the total cost of the bike lane
+    bike lane should be added, False otherwise. More precisely: Always return
+    False if the total cost of the bike lane network is larger than
+    (2-w)*total_budget, and always True if the total cost of the bike lane
     network is smaller than w*total_budget. In between these values, the
     probability to return True depends linearly on the total cost of the bike
     lane network.
@@ -370,7 +370,7 @@ def decide_building(total_budget, w, edge_dict, cost):
     :type total_budget: float
     :param w: Controls how gentle the transition from "always removing"-behavior
     to "always adding"-behavior should occur: For (1-w) << 1, it occurs very
-    rapidly, and it is the most genlte for w = 0.
+    rapidly, and it is the most gentle for w = 0.
     :type w: float
     :param edge_dict: Dictionary with all edge information.
     :type edge_dict: dict of dicts
@@ -390,10 +390,7 @@ def decide_building(total_budget, w, edge_dict, cost):
         # und (2-w)*Budget
         p = 1 - 1/(2*(1-w))*(price/total_budget - w)
 
-    if p < q:
-        return True
-    else:
-        return False
+    return q < p
 
 
 def real_trip_length(trip_info, edge_dict):

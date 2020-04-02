@@ -139,7 +139,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
     log_idx = 0
 
     while True:
-        rev = not decide_building(total_budget, w, edge_dict, street_cost)
+        rev = decide_building(total_budget, w, edge_dict, street_cost)
 
         # Calculate minimal loaded unedited edge:
         min_loaded_edge = get_minimal_loaded_edge(edge_dict, trips_dict,
