@@ -126,7 +126,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
     nbr_of_cbc = [cc_n]
     gcbc_size = [max(cc_size.values(), default=0)]
 
-    # if we have found the optimal bike network satisfying the budget
+    # when we have found the optimal bike network satisfying the budget
     # constraints, set this to True
     budget_found = False
 
@@ -137,16 +137,30 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         log_at = [0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.25, 0.2, 0.15, 0.1,
                   0.05, 0.025, 0.01, 0]
     log_idx = 0
+    
+    #condition for the while loop (initial building/removal of paths):
+    # if rev:
+    #     #build bike paths till cost above (2-w)*budget
+    #     condition = (get_total_cost(edge_dict, cost, bike_lanes_everywhere= False) < (2-w)*total_budget)
+    # else:
+    #     #remove bike paths till costs below w*budget
+    #     condition = (get_total_cost(edge_dict, cost, bike_lanes_everywhere= False) < w*total_budget)
 
-    while True:
-        rev = decide_building(total_budget, w, edge_dict, street_cost)
+    while (rev==(get_total_cost(edge_dict, cost, bike_lanes_everywhere= False) < (2-w)*total_budget)) \
+           or (rev == (get_total_cost(edge_dict, cost, bike_lanes_everywhere= False) < w*total_budget)):
+        #rev = decide_building(total_budget, w, edge_dict, street_cost)
 
         # Calculate minimal loaded unedited edge:
         min_loaded_edge = get_minimal_loaded_edge(edge_dict, trips_dict,
                                                   minmode=minmode, rev=rev)
-        if min_loaded_edge == 'We are done!':
-            print(min_loaded_edge)
-            break
+        
+        # Die Abbruchbed. brauchen wir in dieser loop nicht mehr, weil wir 
+        # nicht mehr KOMPLETT ab/aufbauen, sondern nur noch bis w*budget
+        # oder (2-w)*budget erreicht ist:
+        # if min_loaded_edge == 'We are done!':
+        #     print(min_loaded_edge)
+        #     break
+        
         edited_edges.append(min_loaded_edge)
         edited_edges_nx.append(get_nx_edge(min_loaded_edge, nk2nx_edges))
         remove_isolated_nodes(nkG_edited)
@@ -222,7 +236,21 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
             mes = 'Saved at building budget as {}_data_mode_{:d}{}_budget.npy'\
                 .format(place, rev, minmode)
             save_data(loc, data, logfile, mes)
-
+    
+    #HERE implement the loop for the conditional building/removing of bike paths
+    while True: 
+        
+        #decide whether to build a lane or not
+        decision = decide_building(total_budget, w, edge_dict, cost)
+        
+        # Calculate minimal loaded unedited edge:
+        min_loaded_edge = get_minimal_loaded_edge(edge_dict, trips_dict,
+                                                  minmode=minmode, rev=rev)
+        # Calculate maximal loaded street
+        max_loaded_street = get_minimal_loaded_edge(edge_dict, trips_dict, 
+                                                      minmode=minmode, rev= not rev)
+        
+    
     # Save data of this run to data array
     data = np.array([edited_edges, edited_edges_nx, total_cost, bike_lane_perc,
                      total_real_distance_traveled,
