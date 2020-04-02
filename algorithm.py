@@ -260,6 +260,18 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         # Calculate len of all trips running over min loaded edge.
         len_before = get_len_of_trips_over_edge(min_loaded_edge, edge_dict,
                                                 trips_dict)
+        
+        # Edit minimal loaded edge and update edge_dict.
+        edit_edge(nkG, edge_dict, min_loaded_edge)
+        
+        
+
+        
+        
+        """ HERE ENDS OUR JOB """
+        
+        
+        # CONSEQUENCES FOR THE NETWORK
         # Calculate cost of "adding" bike lane
         this_edge_cost = get_cost(min_loaded_edge, edge_dict, street_cost)
         if rev:
@@ -268,20 +280,12 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         else:
             # removing a bike path -> decrease total cost
             total_cost.append(total_cost[-1] - this_edge_cost)
-        # Edit minimal loaded edge and update edge_dict.
-        edit_edge(nkG, edge_dict, min_loaded_edge)
         # Get all trips affected by editing the edge
         if rev:
             trips_recalc = deepcopy(trips_dict)
         else:
             trips_recalc = {trip: trips_dict[trip] for trip
                             in edge_dict[min_loaded_edge]['trips']}
-        
-        
-        """ HERE ENDS OUR JOB """
-        
-        
-        # CONSEQUENCES FOR THE NETWORK (don't change anything here)
         # Recalculate all affected trips and update their information.
         calc_trips(nkG, edge_dict, trips_recalc)
         trips_dict.update(trips_recalc)
