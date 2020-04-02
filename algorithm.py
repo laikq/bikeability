@@ -137,7 +137,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         log_at = [0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.25, 0.2, 0.15, 0.1,
                   0.05, 0.025, 0.01, 0]
     log_idx = 0
-    
+    iter_log_counter = 0    #log every 100 iterations
+    iter_log_nr = 0
     
     while (rev==(get_total_cost(edge_dict, cost, bike_lanes_everywhere= False) < (2-w)*total_budget)) \
            or (rev == (get_total_cost(edge_dict, cost, bike_lanes_everywhere= False) < w*total_budget)):
@@ -209,9 +210,13 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
 
 
         # LOGGING (don't change anything here)
-        next_log = log_at[log_idx]
-        if (rev and bike_lane_perc[-1] > next_log) or \
-                (not rev and bike_lane_perc[-1] < next_log):
+#        next_log = log_at[log_idx]
+        if iter_log_counter == 100:
+#         (rev and bike_lane_perc[-1] > next_log) or \
+#                 (not rev and bike_lane_perc[-1] < next_log):
+            if iter_log_counter == 100: iter_log_nr += 1
+            iter_log_counter = (iter_log_counter +1)%100
+            
             log_to_file(file=logfile, txt='Reached {0:3.2f} BLP'
                         .format(next_log), stamptime=time.localtime(),
                         start=starttime, end=time.time(), stamp=True,
@@ -221,27 +226,29 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                              total_felt_distance_traveled, nbr_on_street,
                              len_saved, nbr_of_cbc, gcbc_size])
             loc = 'data/algorithm/output/{0:}_data_mode_{1:d}{2:}_{3:02d}.npy'\
-                .format(place, rev, minmode, log_idx+1)
+                .format(place, rev, minmode, iter_log_nr)
             mes = 'Saved at BLP {0:} as {1:}_data_mode_{2:d}{3:}_{4:02d}.npy'\
-                .format(next_log, place, rev, minmode, log_idx+1)
+                .format(next_log, place, rev, minmode, iter_log_nr)
             save_data(loc, data, logfile, mes)
-            log_idx += 1
+            
 
-        if ((rev and total_cost[-1] > total_budget) or
-            (not rev and total_cost[-1] < total_budget)) and not budget_found:
-            budget_found = True
-            log_to_file(file=logfile, txt='Reached building budget',
-                        stamptime=time.localtime(), start=starttime,
-                        end=time.time(), stamp=True, difference=True)
-            data = np.array([edited_edges, edited_edges_nx, total_cost,
-                             bike_lane_perc, total_real_distance_traveled,
-                             total_felt_distance_traveled, nbr_on_street,
-                             len_saved, nbr_of_cbc, gcbc_size])
-            loc = 'data/algorithm/output/{}_data_mode_{:d}{}_budget.npy'\
-                .format(place, rev, minmode)
-            mes = 'Saved at building budget as {}_data_mode_{:d}{}_budget.npy'\
-                .format(place, rev, minmode)
-            save_data(loc, data, logfile, mes)
+
+
+        # if ((rev and total_cost[-1] > total_budget) or
+        #     (not rev and total_cost[-1] < total_budget)) and not budget_found:
+        #     budget_found = True
+        #     log_to_file(file=logfile, txt='Reached building budget',
+        #                 stamptime=time.localtime(), start=starttime,
+        #                 end=time.time(), stamp=True, difference=True)
+        #     data = np.array([edited_edges, edited_edges_nx, total_cost,
+        #                      bike_lane_perc, total_real_distance_traveled,
+        #                      total_felt_distance_traveled, nbr_on_street,
+        #                      len_saved, nbr_of_cbc, gcbc_size])
+        #     loc = 'data/algorithm/output/{}_data_mode_{:d}{}_budget.npy'\
+        #         .format(place, rev, minmode)
+        #     mes = 'Saved at building budget as {}_data_mode_{:d}{}_budget.npy'\
+        #         .format(place, rev, minmode)
+        #     save_data(loc, data, logfile, mes)
     
     
     #HERE implement the loop for the conditional building/removing of bike paths
@@ -261,7 +268,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         max_loaded_street = get_minimal_loaded_edge(edge_dict, trips_dict, 
                                                       minmode=minmode, rev= not rev)
         
-
+        
+        
         
         
         """ HERE ENDS OUR JOB """
@@ -287,7 +295,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         gcbc_size.append(max(cc_size.values(), default=0))
 
 
-        # LOGGING (don't change anything here)
+        # LOGGING (don't change anything here) 
         next_log = log_at[log_idx]
         if (rev and bike_lane_perc[-1] > next_log) or \
                 (not rev and bike_lane_perc[-1] < next_log):
