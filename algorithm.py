@@ -249,20 +249,21 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         max_loaded_street = get_minimal_loaded_edge(edge_dict, trips_dict, 
                                                       minmode=minmode, rev= not rev)
         
+        #chosen_edge = ...
+        #action = ...
+        
         
         # EDITING THE CHOSEN EDGE 
-        edited_edges.append(min_loaded_edge)
-        edited_edges_nx.append(get_nx_edge(min_loaded_edge, nk2nx_edges))
-        if rev: action = 'build'
-        else: action = 'remove'
+        edited_edges.append(chosen_edge)
+        edited_edges_nx.append(get_nx_edge(chosen_edge, nk2nx_edges))
         edge_action.append(action)
         remove_isolated_nodes(nkG_edited)
         # Calculate len of all trips running over min loaded edge.
-        len_before = get_len_of_trips_over_edge(min_loaded_edge, edge_dict,
+        len_before = get_len_of_trips_over_edge(chosen_edge, edge_dict,
                                                 trips_dict)
         
-        # Edit minimal loaded edge and update edge_dict.
-        edit_edge(nkG, edge_dict, min_loaded_edge)
+        # Edit minimal chosen edge and update edge_dict.
+        edit_edge(nkG, edge_dict, chosen_edge)
         
         
 
@@ -274,10 +275,10 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         # CONSEQUENCES FOR THE NETWORK
         # Calculate cost of "adding" bike lane
         this_edge_cost = get_cost(min_loaded_edge, edge_dict, street_cost)
-        if rev:
+        if action == 'build':
             # building a bike path -> increase total cost
             total_cost.append(total_cost[-1] + this_edge_cost)
-        else:
+        elif action == 'remove':
             # removing a bike path -> decrease total cost
             total_cost.append(total_cost[-1] - this_edge_cost)
         # Get all trips affected by editing the edge
