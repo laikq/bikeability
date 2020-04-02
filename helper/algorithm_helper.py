@@ -270,6 +270,40 @@ def get_minimal_loaded_edge(edge_dict, trips_dict, minmode=0, rev=False):
             min_edge = min_edges[np.random.choice(len(min_edges))]
             return min_edge
 
+def get_most_travelled_trip(trips_dict, rang):
+    """
+    Calculates the most frequented trip 
+    :param trips_dict: Dictionary with al information about the trips.
+    :type trips_dict: dict of dicts
+    :return: trip
+    :rtype: tuple of integers
+    """
+    trip_nbrs = {trip: trip_info['nbr of trips'] for trip, trip_info in trips_dict}
+    sorted_trips = [k for k, v in sorted(trip_nbrs.items(), key=lambda item: item[1])]
+    return sorted_trips[rang]
+
+def sort_edges_of_trip(trip, edge_dict, trips_dict, minmode =0 , rev=True):
+    """
+    Sorts all edges of one trip regarding to the load of the edges
+    :param trip: a single trip
+    :type trip: tuple of integers
+    :param edge_dict: Dictionary with all information about the edges.
+    :type edge_dict: dict of dicts.
+    :return: list of sorted edges
+    :rtype: list of tuple of integers
+    """
+    trip_edges = get_trip_edges(edge_dict, trip)
+    trip_edges_dict = {edge: edge_info for edge, edge_info in edge_dict
+                       if edge in trip_edges}
+    sorted_edges = []
+    for i in len(trip_edges):
+        next_edge = get_minimal_loaded_edge(trip_edges_dict,
+                                trips_dict, minmode, rev = True)
+        sorted_edges.append(next_edge)
+        del trip_edges_dict[next_edge]
+    return sorted_edges 
+        
+    
 
 def bike_lane_percentage(edge_dict):
     """
