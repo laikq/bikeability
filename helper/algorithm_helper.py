@@ -145,7 +145,7 @@ def get_street_length(G, edge, nk2nx=False):
     return length
 
 
-def get_cost(edge, edge_dict, cost):
+def get_cost(edge, edge_dict, cost, method='equal'):
     """
     Returns the cost of an edge depending on its street type.
     :param edge: Edge.
@@ -159,10 +159,14 @@ def get_cost(edge, edge_dict, cost):
     """
     street_type = edge_dict[edge]['street type']
     street_length = edge_dict[edge]['real length']
-    return street_length * cost[street_type]
+    if method == 'equal':
+        cost = street_length * cost[street_type]
+    elif method == 'weighted':
+        nbr = edge_dict[edge]['load']
+        cost = (0.2*cost['cost per trip']*nbr + 0.8*cost[street_type])*street_length
+    return cost
 
-
-def get_total_cost(edge_dict, cost, bike_lanes_everywhere=False):
+def get_total_cost(edge_dict, cost, bike_lanes_everywhere=False, method = 'equal'):
     """
     Returns the cost of building the bike paths, either only where they are now
     or for the whole network, depending on the parameter bike_lanes_everywhere.
@@ -176,7 +180,7 @@ def get_total_cost(edge_dict, cost, bike_lanes_everywhere=False):
     :return: Cost of all edges in the network
     :rtype: float
     """
-    return sum({get_cost(edge, edge_dict, cost)
+    return sum({get_cost(edge, edge_dict, cost, method)
                 for edge, ed
                 in edge_dict.items()
                 if ed['bike lane'] or bike_lanes_everywhere})
@@ -391,7 +395,7 @@ def get_len_of_trips_over_edge(edge, edge_list, trips_dict):
     return length
 
 
-def decide_building(total_budget, w, edge_dict, cost):
+def decide_building(total_budget, w, edge_dict, cost, method = 'equal'):
     """
     Monte-Carlo Decision whether to build a bike lane or not. Returns True if a
     bike lane should be added, False otherwise. More precisely: Always return
@@ -413,7 +417,7 @@ def decide_building(total_budget, w, edge_dict, cost):
     :return: decision
     :rtype: bool
     """
-    price = get_total_cost(edge_dict, cost)
+    price = get_total_cost(edge_dict, cost, method)
     q = np.random.rand()
     if price <= w * total_budget:
         p = 1

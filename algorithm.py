@@ -71,7 +71,8 @@ def edit_edge(nkG, edge_dict, edge):
 
 def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                  nk2nx_edges, street_cost, starttime, logfile, place,
-                 minmode, rev, total_budget=10000, w=0.9):
+                 minmode, rev, total_budget=10000, build_method = 'Monte Carlo', 
+                 w=0.9, cost_method = 'equal'):
     """
     Edits the least loaded unedited edge until no unedited edges are left.
     :param nkG: Graph.
@@ -114,7 +115,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         total_cost = [0]
     else:
         total_cost = [get_total_cost(edge_dict, street_cost,
-                                     bike_lanes_everywhere=True)]
+                                     bike_lanes_everywhere=True, cost_method)]
     bike_lane_perc = [bike_lane_percentage(edge_dict)]
     total_real_distance_traveled = [total_len_on_types(trips_dict, 'real')]
     total_felt_distance_traveled = [total_len_on_types(trips_dict, 'felt')]
@@ -136,8 +137,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
     iter_log_nr = 0
 
     #initial building/removal of paths
-    while (rev==(get_total_cost(edge_dict, cost, bike_lanes_everywhere= False) < (2-w)*total_budget)) \
-           or (rev == (get_total_cost(edge_dict, cost, bike_lanes_everywhere= False) < w*total_budget)):
+    while (rev==(get_total_cost(edge_dict, cost, bike_lanes_everywhere= False,cost_method) < (2-w)*total_budget)) \
+           or (rev == (get_total_cost(edge_dict, cost, bike_lanes_everywhere= False,cost_method) < w*total_budget)):
         #condition for the while loop:
         # if rev:
         #     #build bike paths till cost above (2-w)*budget
@@ -172,7 +173,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         len_before = get_len_of_trips_over_edge(min_loaded_edge, edge_dict,
                                                 trips_dict)
         # Calculate cost of "adding" bike lane
-        this_edge_cost = get_cost(min_loaded_edge, edge_dict, street_cost)
+        this_edge_cost = get_cost(min_loaded_edge, edge_dict, street_cost, cost_method)
         if rev:
             # building a bike path -> increase total cost
             total_cost.append(total_cost[-1] + this_edge_cost)
@@ -242,7 +243,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         # ADD DECISION WHEN TO BREAK THE LOOP!
 
         #decide whether to build a lane or not
-        budget_decision = decide_building(total_budget, w, edge_dict, cost)
+        budget_decision = decide_building(total_budget, w, edge_dict, cost, cost_method)
 
         # Calculate minimal loaded unedited edge:
         min_loaded_edge = get_minimal_loaded_edge(edge_dict, trips_dict,
@@ -252,7 +253,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                                                       minmode=minmode, rev=True)
 
         #  Choose Method
-        if method == 'Monte Carlo':
+        if build_method == 'Monte Carlo':
             #action = ...               #bool: True-build, False-remove
             if budget_decision:
                 chosen_edge = max_loaded_street
@@ -261,7 +262,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                 chosen_edge = min_loaded_edge
                 action = False
 
-        if method == 'MFT' and (total_budget > get_total_cost(edge_dict, cost)):
+        if build_method == 'MFT' and (total_budget > get_total_cost(edge_dict,
+                                        cost, bike_lanes_everywhere=False, cost_method)):
             most_frequented_trip = get_most_travelled_trip(trips_dict, rang)
             if iter_edge_counter == len(get_trip_edges(edge_dict, most_frequented_trip)):
                 rang += 1
@@ -271,10 +273,11 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
             sorted_edges = sort_edges_of_trip(most_frequented_trip, edge_dict, minmode, rev=True)
             chosen_edge = sorted_edges[iter_edge_counter]
             action = True
-            #chosen_edge =
-            #action=...
-
-
+        
+        if method == 'Best BA':
+            #method to chose best bikeability
+            ba = [1 -(i -min(trdt['all'])) /(max(trdt['all']) -min(trdt['all'])) for i in trdt['all']]
+            
         # EDITING THE CHOSEN EDGE
         edited_edges.append(chosen_edge)
         edited_edges_nx.append(get_nx_edge(chosen_edge, nk2nx_edges))
@@ -296,7 +299,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
 
         # CONSEQUENCES FOR THE NETWORK
         # Calculate cost of "adding" bike lane
-        this_edge_cost = get_cost(min_loaded_edge, edge_dict, street_cost)
+        this_edge_cost = get_cost(chosen_edge, edge_dict, street_cost, cost_method)
         if action == 'build':
             # building a bike path -> increase total cost
             total_cost.append(total_cost[-1] + this_edge_cost)
@@ -356,7 +359,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
     return data
 
 
-def run_simulation(place, logfile, mode=(0, False)):
+def run_simulation(place, logfile, mode=(0, False), total_budget, w,
+                   build_method, cost_method):
     # Start date and time for logging.
     sd = time.localtime()
     starttime = time.time()
@@ -415,7 +419,7 @@ def run_simulation(place, logfile, mode=(0, False)):
 
     # Set cost for different street types
     street_cost = {'primary': 1, 'secondary': 1, 'tertiary': 1,
-                   'residential': 1}
+                   'residential': 1, 'cost per trip': 0.001}
 
     trips_dict = {t_id: {'nbr of trips': nbr_of_trips, 'nodes': [],
                          'edges': [], 'length real': 0, 'length felt': 0,
@@ -439,11 +443,11 @@ def run_simulation(place, logfile, mode=(0, False)):
         for edge, edge_info in edge_dict.items():
             edge_info['felt length'] *= 1 / edge_info['penalty']
             nkG.setWeight(edge[0], edge[1], edge_info['felt length'])
-
+            
     # Calculate data
     data = edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                         nk2nx_edges, street_cost, starttime, logfile, place,
-                        minmode, rev)
+                        minmode, rev, total_budget, build_method, w, cost_method)
 
     np.save('data/algorithm/output/{:s}_data_mode_{:d}{:d}.npy'
             .format(place, rev, minmode), data)
