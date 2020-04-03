@@ -65,7 +65,10 @@ def edit_edge(nkG, edge_dict, edge):
     :rtype: networkx graph and  dict of dicts
     """
     edge_dict[edge]['bike lane'] = not edge_dict[edge]['bike lane']
-    edge_dict[edge]['felt length'] *= edge_dict[edge]['penalty']
+    if edge_dict[edge]['bike lane'] == False:
+        edge_dict[edge]['felt length'] *= edge_dict[edge]['penalty']
+    else: 
+        edge_dict[edge]['felt length'] /= edge_dict[edge]['penalty']
     nkG.setWeight(edge[0], edge[1], edge_dict[edge]['felt length'])
     return nkG, edge_dict
 
@@ -146,14 +149,16 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         # else:
         #     #remove bike paths till costs below w*budget
         #     condition = (get_total_cost(edge_dict, cost, bike_lanes_everywhere= False) < w*total_budget)
-        
-        print("iteration number {}".format(iter_log_counter))
+
 
         #rev = decide_building(total_budget, w, edge_dict, street_cost)
 
         # Calculate minimal loaded unedited edge:
         min_loaded_edge = get_minimal_loaded_edge(edge_dict, trips_dict,
                                                   minmode=minmode, rev=rev)
+        
+        #print('Schleife1')
+        #print(iter_log_counter)
 
         # Die Abbruchbed. brauchen wir in dieser loop nicht mehr, weil wir
         # nicht mehr KOMPLETT ab/aufbauen, sondern nur noch bis w*budget
@@ -164,6 +169,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
 
 
         # EDITING THE CHOSEN EDGE
+        
         edited_edges.append(min_loaded_edge)
         edited_edges_nx.append(get_nx_edge(min_loaded_edge, nk2nx_edges))
         if rev: action = 'build'
@@ -212,11 +218,13 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
 
         # LOGGING (don't change anything here)
 #        next_log = log_at[log_idx]
-        if iter_log_counter == 100:
+        iter_log_counter = (iter_log_counter +1)%100
+        if iter_log_counter == 0:
 #         (rev and bike_lane_perc[-1] > next_log) or \
 #                 (not rev and bike_lane_perc[-1] < next_log):
-            if iter_log_counter == 100: iter_log_nr += 1
-            iter_log_counter = (iter_log_counter +1)%100
+            iter_log_nr += 1
+            next_log = bike_lane_perc[-1]
+            
 
             log_to_file(file=logfile, txt='Reached {0:3.2f} BLP'
                         .format(next_log), stamptime=time.localtime(),
@@ -252,6 +260,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         # Calculate maximal loaded street
         max_loaded_street = get_minimal_loaded_edge(edge_dict, trips_dict,
                                                       minmode=minmode, rev=True)
+        
+       # print('hi')
 
         #  Choose Method
         if build_method == 'Monte Carlo':
@@ -275,11 +285,17 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
             chosen_edge = sorted_edges[iter_edge_counter]
             action = True
         
-        #if build_method == 'Best BA':
-            #method to chose best bikeability
-            #ba = [1 -(i -min(trdt['all'])) /(max(trdt['all']) -min(trdt['all'])) for i in trdt['all']]
+      ####  if build_method == 'Best BA':
+          ##  #method to chose best bikeability
+       # ##    ba = [1 -(i -min(trdt['all'])) /(max(trdt['all']) -min(trdt['all'])) for i in trdt['all']]
             
         # EDITING THE CHOSEN EDGE
+	
+        #print(chosen_edge)
+        #print('hihi')
+        if chosen_edge == 'We are done!':
+            break
+        
         edited_edges.append(chosen_edge)
         edited_edges_nx.append(get_nx_edge(chosen_edge, nk2nx_edges))
         edge_action.append(action)
@@ -287,9 +303,13 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         # Calculate len of all trips running over min loaded edge.
         len_before = get_len_of_trips_over_edge(chosen_edge, edge_dict,
                                                 trips_dict)
+        
+        #print(edge_dict[chosen_edge]['bike lane'])
 
         # Edit minimal chosen edge and update edge_dict.
         edit_edge(nkG, edge_dict, chosen_edge)
+        
+        #print(edge_dict[chosen_edge]['bike lane'])
 
 
 
@@ -333,9 +353,12 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
 
 
         # LOGGING (don't change anything here)
-        if iter_log_counter == 100:
-            if iter_log_counter == 100: iter_log_nr += 1
-            iter_log_counter = (iter_log_counter +1)%100
+        iter_log_counter = (iter_log_counter +1)%100
+        if iter_log_counter == 0:
+#         (rev and bike_lane_perc[-1] > next_log) or \
+#                 (not rev and bike_lane_perc[-1] < next_log):
+            iter_log_nr += 1
+            next_log = bike_lane_perc[-1]
 
             log_to_file(file=logfile, txt='Reached {0:3.2f} BLP'
                         .format(next_log), stamptime=time.localtime(),
