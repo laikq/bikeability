@@ -135,6 +135,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
     # constraints, set this to True
     budget_found = False
 
+    K = 100
     log_idx = 0
     iter_log_counter = 0    #log every 100 iterations
     iter_log_nr = 0
@@ -217,11 +218,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
 
 
         # LOGGING (don't change anything here)
-#        next_log = log_at[log_idx]
-        iter_log_counter = (iter_log_counter +1)%100
+        iter_log_counter = (iter_log_counter +1)%K
         if iter_log_counter == 0:
-#         (rev and bike_lane_perc[-1] > next_log) or \
-#                 (not rev and bike_lane_perc[-1] < next_log):
             iter_log_nr += 1
             next_log = bike_lane_perc[-1]
             
@@ -243,14 +241,21 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
 
     rang = 0
     iter_edge_counter = 0
-
+    iter_log_counter = 0
+    iter_log_nr_loop1 = iter_log_nr
+    run_times_loop = int(0.05 * len(edge_dict))
+    
     #HERE implement the loop for the conditional building/removing of bike paths
     while True:
 
         """ HERE STARTS OUR JOB """
-        # CHOOSING THE NEXT EDGES TO BE MODIFIED...!
+        
         # ADD DECISION WHEN TO BREAK THE LOOP!
-
+        if (iter_log_counter-iter_log_nr_loop1)*K > run_times_loop:
+            break
+        
+        
+        # CHOOSING THE NEXT EDGES TO BE MODIFIED...!
         #decide whether to build a lane or not
         budget_decision = decide_building(total_budget, w, edge_dict, street_cost, cost_method)
 
@@ -353,7 +358,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
 
 
         # LOGGING (don't change anything here)
-        iter_log_counter = (iter_log_counter +1)%100
+        iter_log_counter = (iter_log_counter +1)%K
         if iter_log_counter == 0:
 #         (rev and bike_lane_perc[-1] > next_log) or \
 #                 (not rev and bike_lane_perc[-1] < next_log):
