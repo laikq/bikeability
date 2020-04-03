@@ -282,7 +282,7 @@ def get_most_travelled_trip(trips_dict, rang):
     :return: trip
     :rtype: tuple of integers
     """
-    trip_nbrs = {trip: trip_info['nbr of trips'] for trip, trip_info in trips_dict}
+    trip_nbrs = {trip: trip_info['nbr of trips'] for trip, trip_info in trips_dict.items()}
     sorted_trips = [k for k, v in sorted(trip_nbrs.items(), key=lambda item: item[1])]
     return sorted_trips[rang]
 
@@ -297,12 +297,13 @@ def sort_edges_of_trip(trip, edge_dict, trips_dict, minmode =0 , rev=True):
     :rtype: list of tuple of integers
     """
     trip_edges = get_trip_edges(edge_dict, trip)
-    trip_edges_dict = {edge: edge_info for edge, edge_info in edge_dict
+    trip_edges_dict = {edge: edge_info for edge, edge_info in edge_dict.items()
                        if edge in trip_edges}
     sorted_edges = []
-    for i in len(trip_edges):
+    for i in range(len(trip_edges)):
         next_edge = get_minimal_loaded_edge(trip_edges_dict,
                                 trips_dict, minmode, rev = True)
+        if next_edge == 'We are done!': break
         sorted_edges.append(next_edge)
         del trip_edges_dict[next_edge]
     return sorted_edges
