@@ -5,6 +5,7 @@
 import osmnx as ox
 import networkx as nx
 from random import uniform
+import numpy as np
 
 
 def get_street_type(G, edge):
@@ -98,6 +99,15 @@ def download_map(place, by_bbox, by_name, by_polygon, trunk=False):
 
 def save_map(G, save_name):
     ox.save_graphml(G, filename='{}.graphml'.format(save_name))
+
+
+def load_graph_data(place, mode):
+    G = ox.load_graphml('{}.graphml'.format(place),
+                        folder='data/algorithm/input', node_type=int)
+    G = G.to_undirected()
+    data = np.load('data/algorithm/output/{}_data_mode_{:d}{}.npy'
+                   .format(place, mode[0], mode[1]), allow_pickle=True)
+    return G, data
 
 
 def main():
