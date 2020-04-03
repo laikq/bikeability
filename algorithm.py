@@ -150,23 +150,10 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         # else:
         #     #remove bike paths till costs below w*budget
         #     condition = (get_total_cost(edge_dict, cost, bike_lanes_everywhere= False) < w*total_budget)
-
-
-        #rev = decide_building(total_budget, w, edge_dict, street_cost)
-
+        
         # Calculate minimal loaded unedited edge:
         min_loaded_edge = get_minimal_loaded_edge(edge_dict, trips_dict,
                                                   minmode=minmode, rev=rev)
-        
-        #print('Schleife1')
-        #print(iter_log_counter)
-
-        # Die Abbruchbed. brauchen wir in dieser loop nicht mehr, weil wir
-        # nicht mehr KOMPLETT ab/aufbauen, sondern nur noch bis w*budget
-        # oder (2-w)*budget erreicht ist:
-        # if min_loaded_edge == 'We are done!':
-        #     print(min_loaded_edge)
-        #     break
 
 
         # EDITING THE CHOSEN EDGE
@@ -250,9 +237,6 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
 
         """ HERE STARTS OUR JOB """
         
-        # ADD DECISION WHEN TO BREAK THE LOOP!
-        if (iter_log_counter-iter_log_nr_loop1)*K > run_times_loop:
-            break
         
         
         # CHOOSING THE NEXT EDGES TO BE MODIFIED...!
@@ -266,8 +250,6 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         max_loaded_street = get_minimal_loaded_edge(edge_dict, trips_dict,
                                                       minmode=minmode, rev=True)
         
-       # print('hi')
-
         #  Choose Method
         if build_method == 'Monte Carlo':
             #action = ...               #bool: True-build, False-remove
@@ -277,6 +259,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
             else:
                 chosen_edge = min_loaded_edge
                 action = False
+        if (iter_log_nr-iter_log_nr_loop1)*K > run_times_loop:
+            break
 
         if build_method == 'MFT' and (total_budget > get_total_cost(edge_dict,
                                         street_cost, False, cost_method)):
@@ -289,15 +273,16 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
             sorted_edges = sort_edges_of_trip(most_frequented_trip, edge_dict, minmode, rev=True)
             chosen_edge = sorted_edges[iter_edge_counter]
             action = True
+        if build_method == 'MFT' and (total_budget < get_total_cost(edge_dict,
+                                        street_cost, False, cost_method)):
+            break 
         
-      ####  if build_method == 'Best BA':
-          ##  #method to chose best bikeability
-       # ##    ba = [1 -(i -min(trdt['all'])) /(max(trdt['all']) -min(trdt['all'])) for i in trdt['all']]
+        #if build_method == 'Best BA':
+            ##method to chose best bikeability
+            #ba = [1 -(i -min(trdt['all'])) /(max(trdt['all']) -min(trdt['all'])) for i in trdt['all']]
             
         # EDITING THE CHOSEN EDGE
 	
-        #print(chosen_edge)
-        #print('hihi')
         if chosen_edge == 'We are done!':
             break
         
@@ -360,11 +345,9 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         # LOGGING (don't change anything here)
         iter_log_counter = (iter_log_counter +1)%K
         if iter_log_counter == 0:
-#         (rev and bike_lane_perc[-1] > next_log) or \
-#                 (not rev and bike_lane_perc[-1] < next_log):
-            iter_log_nr += 1
             next_log = bike_lane_perc[-1]
-
+            iter_log_nr += 1
+            
             log_to_file(file=logfile, txt='Reached {0:3.2f} BLP'
                         .format(next_log), stamptime=time.localtime(),
                         start=starttime, end=time.time(), stamp=True,
