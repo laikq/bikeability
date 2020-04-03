@@ -265,14 +265,16 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         if build_method == 'MFT' and (total_budget > get_total_cost(edge_dict,
                                         street_cost, False, cost_method)):
             most_frequented_trip = get_most_travelled_trip(trips_dict, rang)
-            if iter_edge_counter == len(get_trip_edges(edge_dict, most_frequented_trip)):
-                rang += 1
-                iter_edge_counter = 0
-            else: iter_edge_counter += 1
+            
 
             sorted_edges = sort_edges_of_trip(most_frequented_trip, edge_dict, minmode, rev=True)
             chosen_edge = sorted_edges[iter_edge_counter]
             action = True
+            
+            if iter_edge_counter == len(get_trip_edges(edge_dict, most_frequented_trip))-1:
+                rang += 1
+                iter_edge_counter = 0
+            else: iter_edge_counter += 1
         if build_method == 'MFT' and (total_budget < get_total_cost(edge_dict,
                                         street_cost, False, cost_method)):
             break 
