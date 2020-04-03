@@ -417,7 +417,7 @@ def decide_building(total_budget, w, edge_dict, cost, method = 'equal'):
     :return: decision
     :rtype: bool
     """
-    price = get_total_cost(edge_dict, cost, method)
+    price = get_total_cost(edge_dict, cost, False, method)
     q = np.random.rand()
     if price <= w * total_budget:
         p = 1
