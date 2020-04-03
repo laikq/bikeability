@@ -59,6 +59,85 @@ def coord_transf(x, y, xmin=-0.05, xmax=1.05, ymin=-0.05, ymax=1.05):
     return (x - xmin) / (xmax - xmin), (y - ymin) / (ymax - ymin)
 
 
+def plot_algorithm(place, mode, file_format='png',
+                   slice_by='iteration'):
+    """
+    Plot evolution of bike lanes, in the order the algorithm added / removed
+    them.
+    :param place: name of the city, will only be used for determining .npy file
+    name
+    :param mode: mode of the simulation, will only be used for determining .npy
+    file name
+    :param file_format: what to save the resulting plots as
+    :param slice_by: Strategy for choosing when to plot. If
+    select_by='iteration', every nth iteration will be plotted, such that in
+    total 100 plots result. If select_by='bike lane delta', plotted iterations
+    will be chosen such that between plots, roughly the same amount of bike lane
+    have been added or removed.
+    """
+    G = ox.load_graphml('{}.graphml'.format(place),
+                        folder='data/algorithm/input', node_type=int)
+    G = G.to_undirected()
+    data = np.load('data/algorithm/output/{}_data_mode_{:d}{}.npy'
+                   .format(place, mode[0], mode[1]), allow_pickle=True)
+    edited_edges_nx = data[1]
+    bike_lane_perc = data[3]
+    action = np.full(len(edited_edges_nx), False)
+    # UNCOMMENT ME once data with action was generated
+#    action = data[10]
+    num_iters = len(edited_edges_nx)
+    # the 'bike lane' attribute is one of the following here:
+    # 'added' -- bike lane was added between plots
+    # 'removed' -- bike lane was removed between plots
+    # 'not present' -- no bike lane on this edge
+    # 'present' -- bike lane on this edge, did not change between plots
+    nx.set_edge_attributes(G, 'present', 'bike lane')
+
+    if slice_by == 'iteration':
+        plot_at = np.linspace(0, num_iters - 1, num=101, dtype=np.int64)
+
+    color_dict = {
+        'present': '#0000FF',
+        'not present': '#999999',
+        'added': '#00FF00',
+        'removed': '#FF0000'
+    }
+
+    for i, idx in enumerate(plot_at):
+        print("Iter {}!".format(i))
+        last_idx = plot_at[i - 1] if i > 0 else 0
+        # changes in edited edges
+        ee_changes = edited_edges_nx[last_idx:idx]
+        # actions for these edited edges
+        ac_changes = action[last_idx:idx]
+
+        # 'added' -> 'present', 'removed' -> 'not present'
+        # because G is a multigraph, it would be more accurate to also iterate
+        # over the edge keys (because there might be multiple edges from node i
+        # to node j) -- however, edited_edges_nx does not save keys anyways, so
+        # we only ever edit edges with key 0
+        for u, v, lane in G.edges(data='bike lane'):
+            if lane == 'added':
+                G.edges[u, v, 0]['bike lane'] = 'present'
+            if lane == 'removed':
+                G.edges[u, v, 0]['bike lane'] = 'not present'
+        # update graph
+        for changed_edge, changed_edge_action in zip(ee_changes, ac_changes):
+            if changed_edge_action:
+                G.edges[(*changed_edge, 0)]['bike lane'] = 'added'
+            else:
+                G.edges[(*changed_edge, 0)]['bike lane'] = 'removed'
+
+        edge_color = [color_dict[data] for u, v, data
+                      in G.edges.data('bike lane')]
+        fig, ax = ox.plot_graph(G, edge_color=edge_color, fig_height=6,
+                                fig_width=6, dpi=300, show=False, close=False)
+        fig.suptitle('Iteration: {}'.format(idx), fontsize='x-large')
+        plt.savefig('plots/evolution/{}-iter-{:04d}-mode-{:d}{}.{}'
+                    .format(place, i, mode[0], mode[1], file_format))
+        plt.close(fig)
+
+
 def plot_edited_edges(G, place, edited_edges, bike_lane_perc, node_size,
                       rev=False, minmode=1, file_format='png'):
     """

@@ -272,7 +272,7 @@ def get_minimal_loaded_edge(edge_dict, trips_dict, minmode=0, rev=False):
 
 def get_most_travelled_trip(trips_dict, rang):
     """
-    Calculates the most frequented trip 
+    Calculates the most frequented trip
     :param trips_dict: Dictionary with al information about the trips.
     :type trips_dict: dict of dicts
     :return: trip
@@ -301,9 +301,9 @@ def sort_edges_of_trip(trip, edge_dict, trips_dict, minmode =0 , rev=True):
                                 trips_dict, minmode, rev = True)
         sorted_edges.append(next_edge)
         del trip_edges_dict[next_edge]
-    return sorted_edges 
-        
-    
+    return sorted_edges
+
+
 
 def bike_lane_percentage(edge_dict):
     """
