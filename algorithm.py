@@ -231,6 +231,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
             save_data(loc, data, logfile, mes)
         
     
+    rang = 0
+    iter_edge_counter = 0
     
     #HERE implement the loop for the conditional building/removing of bike paths
     while True: 
@@ -244,13 +246,33 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         
         # Calculate minimal loaded unedited edge:
         min_loaded_edge = get_minimal_loaded_edge(edge_dict, trips_dict,
-                                                  minmode=minmode, rev=rev)
+                                                  minmode=minmode, rev=False)
         # Calculate maximal loaded street
         max_loaded_street = get_minimal_loaded_edge(edge_dict, trips_dict, 
-                                                      minmode=minmode, rev= not rev)
+                                                      minmode=minmode, rev=True)
         
-        #chosen_edge = ...
-        #action = ...
+        #  Choose Method
+        if method == 'Monte Carlo':
+            #action = ...               #bool: True-build, False-remove
+            if budget_decision:
+                chosen_edge = max_loaded_street
+                action = True
+            else: 
+                chosen_edge = min_loaded_edge
+                action = False
+            
+        if method == 'MFT' and (total_budget > get_total_cost(edge_dict, cost)):
+            most_frequented_trip = get_most_travelled_trip(trips_dict, rang)
+            if iter_edge_counter == len(get_trip_edges(edge_dict, most_frequented_trip)):
+                rang += 1
+                iter_edge_counter = 0
+            else: iter_edge_counter += 1
+            
+            sorted_edges = sort_edges_of_trip(most_frequented_trip, edge_dict, minmode, rev=True)
+            chosen_edge = sorted_edges[iter_edge_counter]
+            action = True
+            #chosen_edge = 
+            #action=...
         
         
         # EDITING THE CHOSEN EDGE 
