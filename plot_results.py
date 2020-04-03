@@ -16,6 +16,8 @@ from math import ceil
 from helper.current_state_helper import calc_current_state, \
     get_street_type_cleaned
 
+from helper.data_maps_helper import load_graph_data
+
 
 def len_of_bikepath_by_type(ee, G, rev=False):
     """
@@ -75,11 +77,7 @@ def plot_algorithm(place, mode, file_format='png',
     will be chosen such that between plots, roughly the same amount of bike lane
     have been added or removed.
     """
-    G = ox.load_graphml('{}.graphml'.format(place),
-                        folder='data/algorithm/input', node_type=int)
-    G = G.to_undirected()
-    data = np.load('data/algorithm/output/{}_data_mode_{:d}{}.npy'
-                   .format(place, mode[0], mode[1]), allow_pickle=True)
+    G, data = load_graph_data(place, mode)
     edited_edges_nx = data[1]
     bike_lane_perc = data[3]
     action = np.full(len(edited_edges_nx), False)
