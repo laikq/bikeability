@@ -77,12 +77,15 @@ def plot_algorithm(place, mode, file_format='png',
     will be chosen such that between plots, roughly the same amount of bike lane
     have been added or removed.
     """
-    G, data = load_graph_data(place, mode)
+    #G, data = load_graph_data(place, mode)
+    G = ox.load_graphml('{}.graphml'.format(place), folder='data/algorithm/input', node_type=int)
+    G = G.to_undirected()
+    data = np.load('data/algorithm/output/hh_part_data_mode_01.npy', allow_pickle=True)
     edited_edges_nx = data[1]
     bike_lane_perc = data[3]
     action = np.full(len(edited_edges_nx), False)
     # UNCOMMENT ME once data with action was generated
-#    action = data[10]
+    action = data[10]
     num_iters = len(edited_edges_nx)
     # the 'bike lane' attribute is one of the following here:
     # 'added' -- bike lane was added between plots
@@ -131,8 +134,8 @@ def plot_algorithm(place, mode, file_format='png',
         fig, ax = ox.plot_graph(G, edge_color=edge_color, fig_height=6,
                                 fig_width=6, dpi=300, show=False, close=False)
         fig.suptitle('Iteration: {}'.format(idx), fontsize='x-large')
-        plt.savefig('plots/evolution/{}-iter-{:04d}-mode-{:d}{}.{}'
-                    .format(place, i, mode[0], mode[1], file_format))
+        plt.savefig('plots/evolution/{}-iter-{:04d}-mode-0101.{}'
+                    .format(place, i, file_format))
         plt.close(fig)
 
 
@@ -904,18 +907,33 @@ def compare_cities(cities, mode, color):
 
 
 def main():
-    places = ['hh']
-    minmode = [1]
-    rev = [False, True]
-    modes = list(it.product(rev, minmode))
+    places = 'hh_part'
+    # rev: False=Removing, True=Building
+    minmodes = [1]
+    rev = [False]
+    #budget choice
+    total_budget = [1000]
 
-    for city in places:
-        plot_city(city, modes)
+    # method choices
+    build_method = ['Monte Carlo']
+    w = [0.9]
+    cost_method = ['equal']
 
-    colors = ['royalblue', 'orangered']
-    comp_color = {city: colors[idx] for idx, city in enumerate(places)}
-    for m in modes:
-        compare_cities(places, m, comp_color)
+
+    modes = list(it.product(rev, minmodes, total_budget, build_method, 
+                                   w, cost_method))
+
+
+
+    plot_algorithm(places, modes, file_format='png',slice_by='iteration')
+
+    #for city in places:
+     #   plot_city(city, modes)
+
+    #colors = ['royalblue', 'orangered']
+    #comp_color = {city: colors[idx] for idx, city in enumerate(places)}
+    #for m in modes:
+     #   compare_cities(places, m, comp_color)
 
 
 if __name__ == '__main__':

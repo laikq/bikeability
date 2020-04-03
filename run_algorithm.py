@@ -37,7 +37,7 @@ def main():
     minmodes = [1]
     rev = [False]
     #budget choice
-    total_budget = [1000000]
+    total_budget = [20000]
     
     # method choices
     build_method = ['Monte Carlo']
