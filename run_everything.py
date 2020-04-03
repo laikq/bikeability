@@ -23,16 +23,20 @@ logfile = 'log/algorithm'
 #          2=weighted by average trip length
 # rev: False=Removing, True=Building
 minmodes = [1]
-rev = [False, True]
-modes = list(itertools.product(rev, minmodes))
-
+rev = [False]
 #budget choice
-total_budget = 1000000
+total_budget = [1000000]
 
 # method choices
-build_method = 'Monte Carlo'
-w = 0.9
-cost_method = 'equal'
+build_method = ['Monte Carlo']
+w = [0.9]
+cost_method = ['equal']
+
+
+modes = list(itertools.product(rev, minmodes, total_budget, build_method, 
+                               w, cost_method))
+
+
 
 # Ignore clean_city() if you hav less than 16GB of RAM.
 # clean_city(city, save, big_csv, stations_csv)

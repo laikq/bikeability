@@ -5,6 +5,7 @@ import osmnx as ox
 from helper.algorithm_helper import *
 from helper.logger_helper import *
 from copy import deepcopy
+import time
 
 
 def calc_trips(nkG, edge_dict, trips_dict):
@@ -114,8 +115,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
     if rev:
         total_cost = [0]
     else:
-        total_cost = [get_total_cost(edge_dict, street_cost,
-                                     bike_lanes_everywhere=True, cost_method)]
+        total_cost = [get_total_cost(edge_dict, street_cost, True, cost_method)]
     bike_lane_perc = [bike_lane_percentage(edge_dict)]
     total_real_distance_traveled = [total_len_on_types(trips_dict, 'real')]
     total_felt_distance_traveled = [total_len_on_types(trips_dict, 'felt')]
@@ -137,8 +137,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
     iter_log_nr = 0
 
     #initial building/removal of paths
-    while (rev==(get_total_cost(edge_dict, cost, bike_lanes_everywhere= False,cost_method) < (2-w)*total_budget)) \
-           or (rev == (get_total_cost(edge_dict, cost, bike_lanes_everywhere= False,cost_method) < w*total_budget)):
+    while (rev==(get_total_cost(edge_dict, cost,False,cost_method) < (2-w)*total_budget)) \
+           or (rev == (get_total_cost(edge_dict, cost, False,cost_method) < w*total_budget)):
         #condition for the while loop:
         # if rev:
         #     #build bike paths till cost above (2-w)*budget
@@ -263,7 +263,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                 action = False
 
         if build_method == 'MFT' and (total_budget > get_total_cost(edge_dict,
-                                        cost, bike_lanes_everywhere=False, cost_method)):
+                                        cost, False, cost_method)):
             most_frequented_trip = get_most_travelled_trip(trips_dict, rang)
             if iter_edge_counter == len(get_trip_edges(edge_dict, most_frequented_trip)):
                 rang += 1
@@ -359,14 +359,17 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
     return data
 
 
-def run_simulation(place, logfile, mode=(0, False), total_budget, w,
-                   build_method, cost_method):
+def run_simulation(place, logfile, mode):
     # Start date and time for logging.
     sd = time.localtime()
     starttime = time.time()
 
     rev = mode[0]
     minmode = mode[1]
+    total_budget = mode[2]
+    build_method = mode[3]
+    w = mode[4]
+    cost_method = mode[5]
 
     logfile = logfile + '_{:d}{:}.txt'.format(rev, minmode)
 
