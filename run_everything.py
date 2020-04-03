@@ -41,5 +41,5 @@ modes = list(itertools.product(rev, minmodes, total_budget, build_method,
 # Ignore clean_city() if you hav less than 16GB of RAM.
 # clean_city(city, save, big_csv, stations_csv)
 prep_city(city, which_result, save)
-run_city(save, modes, logfile, processes=16, total_budget, build_method, w, cost_method)
+run_city(save, modes, logfile, processes=4)
 plot_city(save, modes)

@@ -137,8 +137,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
     iter_log_nr = 0
 
     #initial building/removal of paths
-    while (rev==(get_total_cost(edge_dict, cost,False,cost_method) < (2-w)*total_budget)) \
-           or (rev == (get_total_cost(edge_dict, cost, False,cost_method) < w*total_budget)):
+    while (rev==(get_total_cost(edge_dict, street_cost,False,cost_method) < (2-w)*total_budget)) \
+           or (rev == (get_total_cost(edge_dict, street_cost, False,cost_method) < w*total_budget)):
         #condition for the while loop:
         # if rev:
         #     #build bike paths till cost above (2-w)*budget
@@ -146,7 +146,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         # else:
         #     #remove bike paths till costs below w*budget
         #     condition = (get_total_cost(edge_dict, cost, bike_lanes_everywhere= False) < w*total_budget)
-
+        
+        print("iteration number {}".format(iter_log_counter))
 
         #rev = decide_building(total_budget, w, edge_dict, street_cost)
 
@@ -243,7 +244,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         # ADD DECISION WHEN TO BREAK THE LOOP!
 
         #decide whether to build a lane or not
-        budget_decision = decide_building(total_budget, w, edge_dict, cost, cost_method)
+        budget_decision = decide_building(total_budget, w, edge_dict, street_cost, cost_method)
 
         # Calculate minimal loaded unedited edge:
         min_loaded_edge = get_minimal_loaded_edge(edge_dict, trips_dict,
@@ -263,7 +264,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                 action = False
 
         if build_method == 'MFT' and (total_budget > get_total_cost(edge_dict,
-                                        cost, False, cost_method)):
+                                        street_cost, False, cost_method)):
             most_frequented_trip = get_most_travelled_trip(trips_dict, rang)
             if iter_edge_counter == len(get_trip_edges(edge_dict, most_frequented_trip)):
                 rang += 1
@@ -274,9 +275,9 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
             chosen_edge = sorted_edges[iter_edge_counter]
             action = True
         
-        if method == 'Best BA':
+        #if build_method == 'Best BA':
             #method to chose best bikeability
-            ba = [1 -(i -min(trdt['all'])) /(max(trdt['all']) -min(trdt['all'])) for i in trdt['all']]
+            #ba = [1 -(i -min(trdt['all'])) /(max(trdt['all']) -min(trdt['all'])) for i in trdt['all']]
             
         # EDITING THE CHOSEN EDGE
         edited_edges.append(chosen_edge)
