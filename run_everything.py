@@ -26,8 +26,16 @@ minmodes = [1]
 rev = [False, True]
 modes = list(itertools.product(rev, minmodes))
 
+#budget choice
+total_budget = 1000000
+
+# method choices
+build_method = 'Monte Carlo'
+w = 0.9
+cost_method = 'equal'
+
 # Ignore clean_city() if you hav less than 16GB of RAM.
 # clean_city(city, save, big_csv, stations_csv)
 prep_city(city, which_result, save)
-run_city(save, modes, logfile, processes=16)
+run_city(save, modes, logfile, processes=16, total_budget, build_method, w, cost_method)
 plot_city(save, modes)

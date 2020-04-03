@@ -4,7 +4,7 @@ from functools import partial
 import itertools
 
 
-def run_city(save, modes, logfile, processes):
+def run_city(save, modes, logfile, processes, total_budget, build_method, w, cost_method):
     """
     Runs the algorithm with all modes possible (load weighting and
     building/removing).
@@ -33,7 +33,7 @@ def main():
     rev = [False, True]
     modes = list(itertools.product(rev, minmodes))
 
-    run_city(save, modes, logfile, processes)
+    run_city(save, modes, logfile, processes, total_budget, build_method, w, cost_method)
 
 
 if __name__ == '__main__':
