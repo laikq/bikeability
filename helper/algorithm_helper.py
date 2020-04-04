@@ -297,15 +297,9 @@ def sort_edges_of_trip(trip, edge_dict, trips_dict, minmode =0 , rev=True):
     :rtype: list of tuple of integers
     """
     trip_edges = get_trip_edges(edge_dict, trip)
-    trip_edges_dict = {edge: edge_info for edge, edge_info in edge_dict.items()
+    trip_edges_load = {edge: edge_info['load'] for edge, edge_info in edge_dict.items()
                        if edge in trip_edges}
-    sorted_edges = []
-    for i in range(len(trip_edges)):
-        next_edge = get_minimal_loaded_edge(trip_edges_dict,
-                                trips_dict, minmode, rev = True)
-        if next_edge == 'We are done!': break
-        sorted_edges.append(next_edge)
-        del trip_edges_dict[next_edge]
+    sorted_edges = [k for k,v in sorted(trip_edges_load.items(), key = lambda item: -item[1])]
     return sorted_edges
 
 
