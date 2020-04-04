@@ -145,7 +145,7 @@ def get_street_length(G, edge, nk2nx=False):
     return length
 
 
-def get_cost(edge, edge_dict, cost, method='equal'):
+def get_cost(edge, edge_dict, cost, method=0):
     """
     Returns the cost of an edge depending on its street type.
     :param edge: Edge.
@@ -159,14 +159,14 @@ def get_cost(edge, edge_dict, cost, method='equal'):
     """
     street_type = edge_dict[edge]['street type']
     street_length = edge_dict[edge]['real length']
-    if method == 'equal':
+    if method == 0:
         cost = street_length * cost[street_type]
-    elif method == 'weighted':
+    elif method == 1:
         nbr = edge_dict[edge]['load']
         cost = (0.2*cost['cost per trip']*nbr + 0.8*cost[street_type])*street_length
     return cost
 
-def get_total_cost(edge_dict, cost, bike_lanes_everywhere=False, method = 'equal'):
+def get_total_cost(edge_dict, cost, bike_lanes_everywhere=False, method = 0):
     """
     Returns the cost of building the bike paths, either only where they are now
     or for the whole network, depending on the parameter bike_lanes_everywhere.
