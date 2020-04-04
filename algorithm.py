@@ -268,14 +268,24 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
             
 
             sorted_edges = sort_edges_of_trip(most_frequented_trip, edge_dict, minmode, rev=True)
-            sorted_edges_without_bikelane = [edge for edge in sorted_edges if edge_dict[edge]['bike lane'] == True]
-            chosen_edge = sorted_edges_without_bikelane[iter_edge_counter]
-            action = True
+            sorted_edges_without_bikelane = [edge for edge in sorted_edges if edge_dict[edge]['bike lane'] == False]
+            print('here')
             
-            if iter_edge_counter == len(get_trip_edges(edge_dict, most_frequented_trip))-1:
+            
+            if len(sorted_edges_without_bikelane)==0:
+                rang +=1 
+                iter_edge_counter =0
+                continue
+            elif iter_edge_counter == len(sorted_edges_without_bikelane)-1:
+                chosen_edge = sorted_edges_without_bikelane[iter_edge_counter]
+                action = True
                 rang += 1
                 iter_edge_counter = 0
-            else: iter_edge_counter += 1
+            else: 
+                chosen_edge = sorted_edges_without_bikelane[iter_edge_counter]
+                action = True
+                iter_edge_counter += 1
+        
         if build_method == 'MFT' and (total_budget < get_total_cost(edge_dict,
                                         street_cost, False, cost_method)):
             break 
