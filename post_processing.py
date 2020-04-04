@@ -23,13 +23,14 @@ def apply_edge_operations(G, edited_edges, edge_action):
     return G
 
 
-def get_best_graph(place, mode):
+def get_best_graph(place, mode, budget=1000):
     """
     Return the networkx graph G with the best bikeability.
     """
     G, data = load_graph_data(place, mode)
     edited_edges = data[1]
     edited_edges_action = data[10]
+    total_cost = data[2]
     total_real_distance_traveled = data[4]
     max_dist_on_all = max({t['total length on all']
                            for t in total_real_distance_traveled})
@@ -39,6 +40,10 @@ def get_best_graph(place, mode):
     min_norm = min(norm_dist_on_all)
     bikeability = [1 - (t - min_norm) / (max_norm - min_norm)
                    for t in norm_dist_on_all]
+    # set bikeability to 0 for all configurations that cost more than our budget
+    # -- because bike paths are worth nothing if they can't be built!
+    bikeability = [0 if cost > budget else ba
+                   for cost, ba in zip(total_cost, bikeability)]
     max_bikeability_index = np.argmax(bikeability)
     apply_edge_operations(G, edited_edges[:max_bikeability_index+1],
                           edited_edges_action[:max_bikeability_index+1])

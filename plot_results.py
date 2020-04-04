@@ -83,8 +83,6 @@ def plot_algorithm(place, mode, file_format='png',
     data = np.load('data/algorithm/output/hh_part_data_mode_01.npy', allow_pickle=True)
     edited_edges_nx = data[1]
     bike_lane_perc = data[3]
-    action = np.full(len(edited_edges_nx), False)
-    # UNCOMMENT ME once data with action was generated
     action = data[10]
     num_iters = len(edited_edges_nx)
     # the 'bike lane' attribute is one of the following here:
