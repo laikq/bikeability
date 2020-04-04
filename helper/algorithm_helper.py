@@ -154,6 +154,8 @@ def get_cost(edge, edge_dict, cost, method=0):
     :type edge_dict: dict of dicts
     :param cost: Dictionary with cost of edge depending on street type.
     :type cost: dict
+    :param method: Method for calculating the edge cost
+    :type method: int, 0='equal', 1='weighted' 
     :return: Cost of the edge
     :rtype: float
     """
@@ -177,6 +179,8 @@ def get_total_cost(edge_dict, cost, bike_lanes_everywhere=False, method = 0):
     :param bike_lanes_everywhere: If True, calculate the cost for building bike
     lanes on the whole network. If False, calculate the cost for building the
     bike lanes on the network from scratch.
+    :param method: Method for calculating the edge cost
+    :type method: int, 0='equal', 1='weighted'
     :return: Cost of all edges in the network
     :rtype: float
     """
@@ -279,6 +283,8 @@ def get_most_travelled_trip(trips_dict, rang):
     Calculates the most frequented trip
     :param trips_dict: Dictionary with al information about the trips.
     :type trips_dict: dict of dicts
+    :param rang: order of trip according to sorted trips
+    :type rang: int, 0=first most travelled trip, 1=second most travelled trip, ...
     :return: trip
     :rtype: tuple of integers
     """
@@ -286,13 +292,15 @@ def get_most_travelled_trip(trips_dict, rang):
     sorted_trips = [k for k, v in sorted(trip_nbrs.items(), key=lambda item: -item[1])]
     return sorted_trips[rang]
 
-def sort_edges_of_trip(trip, edge_dict, trips_dict, minmode =0 , rev=True):
+def sort_edges_of_trip(trip, edge_dict, trips_dict):
     """
     Sorts all edges of one trip regarding to the load of the edges
     :param trip: a single trip
     :type trip: tuple of integers
     :param edge_dict: Dictionary with all information about the edges.
     :type edge_dict: dict of dicts.
+    :param trips_dict: Dictionary with al information about the trips.
+    :type trips_dict: dict of dicts
     :return: list of sorted edges
     :rtype: list of tuple of integers
     """
@@ -389,7 +397,7 @@ def get_len_of_trips_over_edge(edge, edge_list, trips_dict):
     return length
 
 
-def decide_building(total_budget, w, edge_dict, cost, method = 'equal'):
+def decide_building(total_budget, w, edge_dict, cost, method = 0):
     """
     Monte-Carlo Decision whether to build a bike lane or not. Returns True if a
     bike lane should be added, False otherwise. More precisely: Always return
@@ -408,6 +416,8 @@ def decide_building(total_budget, w, edge_dict, cost, method = 'equal'):
     :type edge_dict: dict of dicts
     :param cost: Dictionary with cost of edge depending on street type.
     :type cost: dict
+    :param method: Method for calculating the edge cost
+    :type method: int, 0='equal', 1='weighted'
     :return: decision
     :rtype: bool
     """

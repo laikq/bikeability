@@ -250,6 +250,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                                                       minmode=minmode, rev=True)
 
         #  Choose Method
+        # Method Monte Carlo
         if build_method == 0:
             #action = ...               #bool: True-build, False-remove
             if budget_decision:
@@ -260,36 +261,43 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                 action = False
         if (iter_log_nr-iter_log_nr_loop1)*K > run_times_loop:
             break
-
+        
+        # Method MFT (most frequented trip)
         if build_method == 1 and (total_budget > get_total_cost(edge_dict,
                                         street_cost, False, cost_method)):
+            # calculate the current MFT with respect to rang
             most_frequented_trip = get_most_travelled_trip(trips_dict, rang)
-
-            sorted_edges = sort_edges_of_trip(most_frequented_trip, edge_dict, trips_dict, minmode, rev=True)
+            # sort edges of current MFT regarding their load
+            sorted_edges = sort_edges_of_trip(most_frequented_trip, edge_dict, trips_dict)
+            # filter only these edges that still have a bike lane
             sorted_edges_without_bikelane = [edge for edge in sorted_edges if not edge_dict[edge]['bike lane']]
 
             if len(sorted_edges_without_bikelane)==0:
+                # in this case all edges of the current MFT already have a bike path
+                # go to the following MFT
                 rang += 1
                 continue
             else:
                 #nimm erste edge ohne Bike Lane und baue. Im nächsten Durchlauf
-                #hat diese edge dann keine Bike Lane mehr
+                #hat diese edge dann keine Bike Lane mehr und verschwindet aus der Liste
                 chosen_edge = sorted_edges_without_bikelane[0]
                 action = True
-
+        
         if build_method == 1 and (total_budget < get_total_cost(edge_dict,
                                         street_cost, False, cost_method)):
+            # When budget is reached break loop and finish building process
             break
 
         #if build_method == 'Best BA':7 6t
             ##method to chose best bikeability
             #ba = [1 -(i -min(trdt['all'])) /(max(trdt['all']) -min(trdt['all'])) for i in trdt['all']]
 
-        # EDITING THE CHOSEN EDGE
 
         if chosen_edge == 'We are done!':
+            # if there is no edge with a bike lane anymore this occurs
             break
-
+        
+        # EDITING THE CHOSEN EDGE
         edited_edges.append(chosen_edge)
         edited_edges_nx.append(get_nx_edge(chosen_edge, nk2nx_edges))
         edge_action.append(action)
