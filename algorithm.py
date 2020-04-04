@@ -227,7 +227,6 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
 
 
     rang = 0
-    iter_edge_counter = 0
     iter_log_counter = 0
     iter_log_nr_loop1 = iter_log_nr
     run_times_loop = int(0.05 * len(edge_dict))
@@ -275,18 +274,13 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
             
             
             if len(sorted_edges_without_bikelane)==0:
-                rang +=1 
-                iter_edge_counter =0
-                continue
-            elif iter_edge_counter == len(sorted_edges_without_bikelane)-1:
-                chosen_edge = sorted_edges_without_bikelane[iter_edge_counter]
-                action = True
                 rang += 1
-                iter_edge_counter = 0
+                continue
             else: 
-                chosen_edge = sorted_edges_without_bikelane[iter_edge_counter]
+                #nimm erste edge ohne Bike Lane und baue. Im nächsten Durchlauf
+                #hat diese edge dann keine Bike Lane mehr
+                chosen_edge = sorted_edges_without_bikelane[0]
                 action = True
-                iter_edge_counter += 1
         
         if build_method == 'MFT' and (total_budget < get_total_cost(edge_dict,
                                         street_cost, False, cost_method)):
