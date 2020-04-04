@@ -28,9 +28,11 @@ rev = [False]
 total_budget = [20000]
 
 # method choices
-build_method = ['Monte Carlo']
+#build method: 0=Monte Carlo , 1=MFT
+build_method = [0,1]
 w = [0.9]
-cost_method = ['equal']
+#cost method: 0 = equal, 1 = weighted
+cost_method = [0]
 
 
 modes = list(itertools.product(rev, minmodes, total_budget, build_method, 
