@@ -268,7 +268,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
             
 
             sorted_edges = sort_edges_of_trip(most_frequented_trip, edge_dict, minmode, rev=True)
-            chosen_edge = sorted_edges[iter_edge_counter]
+            sorted_edges_without_bikelane = [edge for edge in sorted_edges if edge_dict[edge]['bike lane'] == True]
+            chosen_edge = sorted_edges_without_bikelane[iter_edge_counter]
             action = True
             
             if iter_edge_counter == len(get_trip_edges(edge_dict, most_frequented_trip))-1:
@@ -279,7 +280,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                                         street_cost, False, cost_method)):
             break 
         
-        #if build_method == 'Best BA':
+        #if build_method == 'Best BA':7 6t 
             ##method to chose best bikeability
             #ba = [1 -(i -min(trdt['all'])) /(max(trdt['all']) -min(trdt['all'])) for i in trdt['all']]
             
