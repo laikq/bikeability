@@ -29,7 +29,7 @@ total_budget = [20000]
 
 # method choices
 #build method: 0=Monte Carlo , 1=MFT
-build_method = [0,1]
+build_method = [0]
 w = [0.9]
 #cost method: 0 = equal, 1 = weighted
 cost_method = [0]
@@ -45,4 +45,5 @@ modes = list(itertools.product(rev, minmodes, total_budget, build_method,
 prep_city(city, which_result, save)
 run_city(save, modes, logfile, processes=4)
 #plot_city(save, modes)
-plot_algorithm(save, modes, file_format='png',slice_by='iteration')
+mode = modes[0]
+plot_algorithm(save, mode, file_format='png',slice_by='iteration')

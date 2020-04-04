@@ -78,10 +78,6 @@ def plot_algorithm(place, mode, file_format='png',
     have been added or removed.
     """
     G, data = load_graph_data(place, mode)
-    #G = ox.load_graphml('{}.graphml'.format(place), folder='data/algorithm/input', node_type=int)
-    #G = G.to_undirected()
-    #data = np.load('data/algorithm/output/{:s}_data_mode_{:d}{:d}{:d}{:d}.npy'
-     #              .format(place,rev,minmode,build_method, cost_method), allow_pickle=True)
     edited_edges_nx = data[1]
     bike_lane_perc = data[3]
     action = data[10]
