@@ -296,12 +296,11 @@ def sort_edges_of_trip(trip, edge_dict, trips_dict, minmode =0 , rev=True):
     :return: list of sorted edges
     :rtype: list of tuple of integers
     """
-    trip_edges = get_trip_edges(edge_dict, trip)
+    trip_edges = list(trips_dict[trip]['edges'])
     trip_edges_load = {edge: edge_info['load'] for edge, edge_info in edge_dict.items()
                        if edge in trip_edges}
     sorted_edges = [k for k,v in sorted(trip_edges_load.items(), key = lambda item: -item[1])]
     return sorted_edges
-
 
 
 def bike_lane_percentage(edge_dict):
