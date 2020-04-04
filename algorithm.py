@@ -75,8 +75,8 @@ def edit_edge(nkG, edge_dict, edge):
 
 def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                  nk2nx_edges, street_cost, starttime, logfile, place,
-                 minmode, rev, total_budget=10000, build_method = 'Monte Carlo', 
-                 w=0.9, cost_method = 'equal'):
+                 minmode, rev, total_budget=10000, build_method = 0, 
+                 w=0.9, cost_method = 0):
     """
     Edits the least loaded unedited edge until no unedited edges are left.
     :param nkG: Graph.
@@ -219,15 +219,15 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                              bike_lane_perc, total_real_distance_traveled,
                              total_felt_distance_traveled, nbr_on_street,
                              len_saved, nbr_of_cbc, gcbc_size, edge_action])
-            loc = 'data/algorithm/output/{0:}_data_mode_{1:d}{2:}_{3:02d}.npy'\
-                .format(place, rev, minmode, iter_log_nr)
-            mes = 'Saved at BLP {0:} as {1:}_data_mode_{2:d}{3:}_{4:02d}.npy'\
-                .format(next_log, place, rev, minmode, iter_log_nr)
+            loc = 'data/algorithm/output/{0:}_data_mode_{1:d}{2:}{3:}{4:}_{5:02d}.npy'\
+                .format(place, rev, minmode, build_method, cost_method, iter_log_nr)
+            mes = 'Saved at BLP {0:} as {1:}_data_mode_{2:d}{3:}{4:}{5:}_{6:02d}.npy'\
+                .format(next_log, place, rev, minmode, build_method, cost_method, iter_log_nr)
             save_data(loc, data, logfile, mes)
 
 
     rang = 0
-    iter_edge_counter = 0
+    #iter_edge_counter = 0
     iter_log_counter = 0
     iter_log_nr_loop1 = iter_log_nr
     run_times_loop = int(0.05 * len(edge_dict))
@@ -251,7 +251,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                                                       minmode=minmode, rev=True)
         
         #  Choose Method
-        if build_method == 'Monte Carlo':
+        if build_method == 0:
             #action = ...               #bool: True-build, False-remove
             if budget_decision:
                 chosen_edge = max_loaded_street
@@ -262,33 +262,21 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         if (iter_log_nr-iter_log_nr_loop1)*K > run_times_loop:
             break
 
-        if build_method == 'MFT' and (total_budget > get_total_cost(edge_dict,
+        if build_method == 1 and (total_budget > get_total_cost(edge_dict,
                                         street_cost, False, cost_method)):
             most_frequented_trip = get_most_travelled_trip(trips_dict, rang)
-            #print(most_frequented_trip)
-            
 
             sorted_edges = sort_edges_of_trip(most_frequented_trip, edge_dict, trips_dict, minmode, rev=True)
-            print(len(sorted_edges))
             sorted_edges_without_bikelane = [edge for edge in sorted_edges if not edge_dict[edge]['bike lane']]
-            print(len(sorted_edges_without_bikelane))
-            
-            
+                                 
             if len(sorted_edges_without_bikelane)==0:
-                rang +=1 
-                iter_edge_counter =0
+                rang +=1           
                 continue
-            elif iter_edge_counter == len(sorted_edges_without_bikelane)-1:
-                chosen_edge = sorted_edges_without_bikelane[iter_edge_counter]
-                action = True
-                rang += 1
-                iter_edge_counter = 0
             else: 
-                chosen_edge = sorted_edges_without_bikelane[iter_edge_counter]
-                action = True
-                iter_edge_counter += 1
+                chosen_edge = sorted_edges_without_bikelane[0]
+                action = True               
         
-        if build_method == 'MFT' and (total_budget < get_total_cost(edge_dict,
+        if build_method == 1 and (total_budget < get_total_cost(edge_dict,
                                         street_cost, False, cost_method)):
             break 
         
@@ -309,15 +297,11 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         len_before = get_len_of_trips_over_edge(chosen_edge, edge_dict,
                                                 trips_dict)
         
-        #print(edge_dict[chosen_edge]['bike lane'])
 
         # Edit minimal chosen edge and update edge_dict.
         edit_edge(nkG, edge_dict, chosen_edge)
         
-        #print(edge_dict[chosen_edge]['bike lane'])
-
-
-
+       
 
 
         """ HERE ENDS OUR JOB """
@@ -371,10 +355,10 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                              bike_lane_perc, total_real_distance_traveled,
                              total_felt_distance_traveled, nbr_on_street,
                              len_saved, nbr_of_cbc, gcbc_size, edge_action])
-            loc = 'data/algorithm/output/{0:}_data_mode_{1:d}{2:}_{3:02d}.npy'\
-                .format(place, rev, minmode, iter_log_nr)
-            mes = 'Saved at BLP {0:} as {1:}_data_mode_{2:d}{3:}_{4:02d}.npy'\
-                .format(next_log, place, rev, minmode, iter_log_nr)
+            loc = 'data/algorithm/output/{0:}_data_mode_{1:d}{2:}{3:}{4:}_{5:02d}.npy'\
+                .format(place, rev, minmode, build_method, cost_method, iter_log_nr)
+            mes = 'Saved at BLP {0:} as {1:}_data_mode_{2:d}{3:}{4:}{5:}_{6:02d}.npy'\
+                .format(next_log, place, rev, minmode, build_method, cost_method, iter_log_nr)
             save_data(loc, data, logfile, mes)
 
 
@@ -398,7 +382,7 @@ def run_simulation(place, logfile, mode):
     w = mode[4]
     cost_method = mode[5]
 
-    logfile = logfile + '_{:d}{:}.txt'.format(rev, minmode)
+    logfile = logfile + '_{:d}{:}{:}{:}.txt'.format(rev, minmode, build_method, cost_method)
 
     log_to_file(logfile, 'Started optimising {} with minmode {} and reversed '
                          '{}'.format(place.capitalize(), minmode, rev),
@@ -479,8 +463,8 @@ def run_simulation(place, logfile, mode):
                         nk2nx_edges, street_cost, starttime, logfile, place,
                         minmode, rev, total_budget, build_method, w, cost_method)
 
-    np.save('data/algorithm/output/{:s}_data_mode_{:d}{:d}.npy'
-            .format(place, rev, minmode), data)
+    np.save('data/algorithm/output/{:s}_data_mode_{:d}{:d}{:d}{:d}.npy'
+            .format(place, rev, minmode, build_method, cost_method), data)
 
     # Print computation time to console and write it to the log.
     log_to_file(logfile, 'Finished optimising {0:s}o'
