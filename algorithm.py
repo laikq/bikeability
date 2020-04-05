@@ -84,8 +84,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
     :param nkG_edited: Graph that can be edited.
     :type nkG_edited: networkit graph
     :param edge_dict: Dictionary of edges of G. {edge: edge_info}
-    :type edge_dict: dcit of dicts
-    :param trips_dict: Dictionary with al information about the trips.
+    :type edge_dict: dict of dicts
+    :param trips_dict: Dictionary with all information about the trips.
     :type trips_dict: dict of dicts
     :param nk2nx_nodes: Dictionary that maps nk nodes to nx nodes.
     :type nk2nx_nodes: dict
@@ -103,6 +103,14 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
     :type minmode: int
     :param rev: If true, builds up bike lanes, not removes.
     :type rev: bool
+    :param total_budget: budget available for bikelane network
+    :type total_budget: int
+    :param build_method: Which build up method should be chosen (Monte Carlo=0 or MFT=1)
+    :type build_method: int
+    :param w: percentage of total_budget beginning at which MC building up starts
+    :type w: float
+    :param cost_method: Which cost method should be chosen
+    :type cost_method: int
     :return: data array
     :rtype: numpy array
     """
@@ -239,7 +247,8 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
 
 
         # CHOOSING THE NEXT EDGES TO BE MODIFIED...!
-        #decide whether to build a lane or not
+        
+        #decide whether to build a lane or not (bool), using MC method
         budget_decision = decide_building(total_budget, w, edge_dict, street_cost, cost_method)
 
         # Calculate minimal loaded unedited edge:
@@ -252,13 +261,16 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
         #  Choose Method
         # Method Monte Carlo
         if build_method == 0:
-            #action = ...               #bool: True-build, False-remove
             if budget_decision:
+                # if we build, we build the most loaded street
                 chosen_edge = max_loaded_street
                 action = True
             else:
+                # if we don't build, we remove the least loaded street
                 chosen_edge = min_loaded_edge
                 action = False
+                
+        # quit the building method after a certain amount of iterations
         if (iter_log_nr-iter_log_nr_loop1)*K > run_times_loop:
             break
         
