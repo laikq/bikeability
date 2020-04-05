@@ -424,8 +424,10 @@ def decide_building(total_budget, w, edge_dict, cost, method = 0):
     price = get_total_cost(edge_dict, cost, False, method)
     q = np.random.rand()
     if price <= w * total_budget:
+        # always build bike lanes
         p = 1
     elif price >= (2-w) * total_budget:
+        # always remove bike lanes
         p = 0
     else:
         # linearer Verlauf der Wahrscheinlicheit zwischen w*Budget
