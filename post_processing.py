@@ -8,13 +8,30 @@ import networkx as nx
 import osmnx as ox
 
 
-def load_graph_data(place, mode):
+def load_data(place, mode):
+    data = np.load('data/algorithm/output/{}_data_mode_{:d}{}{}{}.npy'
+                   .format(place, mode[0], mode[1], mode[3], mode[5]),
+                   allow_pickle=True)
+    d = {}
+    d['edited edges'] = data[0]
+    d['edited edges nx'] = data[1]
+    d['total cost'] = data[2]
+    d['bike lane perc'] = data[3]
+    d['total real distance traveled'] = data[4]
+    d['total felt distance traveled'] = data[5]
+    d['nbr on street'] = data[6]
+    d['len saved'] = data[7]
+    d['nbr of cbc'] = data[8]
+    d['gcbc size'] = data[9]
+    d['edge action'] = data[10]
+    return d
+
+
+def load_graph(place, mode):
     G = ox.load_graphml('{}.graphml'.format(place),
                         folder='data/algorithm/input', node_type=int)
     G = G.to_undirected()
-    data = np.load('data/algorithm/output/{}_data_mode_{}{}{}{}.npy'
-                   .format(place, int(mode[0]), mode[1], mode[3], mode[5]), allow_pickle=True)
-    return G, data
+    return G
 
 
 def apply_edge_operations(G, edited_edges, edge_action):
@@ -57,17 +74,14 @@ def get_best_graph(place, mode, budget=1000):
     """
     Return the networkx graph G with the best bikeability.
     """
-    G, data = load_graph_data(place, mode)
-    edited_edges = data[1]
-    edited_edges_action = data[10]
-    total_cost = data[2]
-    total_real_distance_traveled = data[4]
-    bikeability = calculate_bikeability(total_real_distance_traveled)
+    G = load_graph(place, mode)
+    data = load_data(place, mode)
+    bikeability = calculate_bikeability(data['total real distance traveled'])
     # set bikeability to 0 for all configurations that cost more than our budget
     # -- because bike paths are worth nothing if they can't be built!
     bikeability = [0 if cost > budget else ba
-                   for cost, ba in zip(total_cost, bikeability)]
+                   for cost, ba in zip(data['total cost'], bikeability)]
     max_bikeability_index = np.argmax(bikeability)
-    apply_edge_operations(G, edited_edges[:max_bikeability_index+1],
-                          edited_edges_action[:max_bikeability_index+1])
+    apply_edge_operations(G, data['edited edges'][:max_bikeability_index+1],
+                          data['edge action'][:max_bikeability_index+1])
     return G

@@ -16,7 +16,7 @@ from math import ceil
 from helper.current_state_helper import calc_current_state, \
     get_street_type_cleaned
 
-from post_processing import load_graph_data
+from post_processing import load_graph, calculate_bikeability, load_data
 
 
 def len_of_bikepath_by_type(ee, G, rev=False):
@@ -77,10 +77,11 @@ def plot_algorithm(place, mode, file_format='png',
     will be chosen such that between plots, roughly the same amount of bike lane
     have been added or removed.
     """
-    G, data = load_graph_data(place, mode)
-    edited_edges_nx = data[1]
-    bike_lane_perc = data[3]
-    action = data[10]
+    G = load_graph(place, mode)
+    data = load_data(place, mode)
+    edited_edges_nx = data['edited edges nx']
+    bike_lane_perc = data['bike lane perc']
+    action = data['edge action']
     num_iters = len(edited_edges_nx)
     # the 'bike lane' attribute is one of the following here:
     # 'added' -- bike lane was added between plots
