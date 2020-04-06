@@ -24,6 +24,27 @@ def load_data(place, mode):
     d['nbr of cbc'] = data[8]
     d['gcbc size'] = data[9]
     d['edge action'] = data[10]
+    d['bikeability'] = calculate_bikeability(d['total real distance traveled'])
+    d['iteration'] = list(range(len(d['bikeability'])))
+    # "unpack" the dictionaries 'total real distance traveled' and 'total felt
+    # distance traveled'
+    # goal: entries like d['total felt length on street'] return what you expect
+    #       (that is: [t['total length on street']
+    #                  for t in d['total felt distance traveled']])
+    # step 1: transform list of dicts -> dict of lists
+    tdt_dict = {}
+    for rf in ('real', 'felt'):
+        tdt_dict[rf] = {}
+        for key in d['total ' + rf + ' distance traveled'][0]:
+            tdt_dict[rf][key] = [t[key] for t
+                                 in d['total ' + rf + ' distance traveled']]
+    # step 2: unpack the tdt_dict into d
+    for rf in ('real', 'felt'):
+        for key, val in tdt_dict[rf].items():
+            # key is something like 'total length on all'
+            # val is a list
+            d_key = key.replace('total length', 'total ' + rf + ' length')
+            d[d_key] = val
     return d
 
 

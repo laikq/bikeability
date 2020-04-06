@@ -905,6 +905,65 @@ def compare_cities(cities, mode, color):
     # plt.show()
 
 
+def format_mode(mode):
+    flags = []
+    if mode[0]:
+        flags.append('rev')
+    flags.append('minmode ' + str(mode[1]))  # minmode
+    # how to display build methods
+    bm_dict = {
+        0: 'Monte Carlo',
+        1: 'MFT'
+    }
+    flags.append(bm_dict[mode[3]])
+    cost_dict = {
+        0: 'equal cost',
+        1: 'weighted cost'
+    }
+    flags.append(cost_dict[mode[5]])
+    return ', '.join(flags)
+
+
+def generic_mini_plot(data, modes, x_label, y_label, save=True):
+    """
+    Do a not-too-fancy plot of data and modes.
+    :param x_label: the index for data to use for the x axis
+    :param y_label: the index for data to use for the y axis
+    :return: fig, ax
+    """
+    fig, ax = plt.subplots()
+    for m in modes:
+        ax.plot(data[m][x_label], data[m][y_label], label=format_mode(m), alpha=0.8)
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+    ax.legend()
+    if save:
+        fname = ('plots/' +
+                 x_label.replace(' ', '_') + '-' +
+                 y_label.replace(' ', '_') + '.png')
+        fig.savefig(fname)
+        plt.close(fig)
+    return fig, ax
+
+
+def plot_city_mini(place, modes):
+    """
+    :param modes: list of modes
+    """
+    # data is a dictionary: mode -> data for mode
+    data = {}
+    for m in modes:
+        data[m] = load_data(place, m)
+
+    # cost - bikeability - plot
+    generic_mini_plot(data, modes, 'total cost', 'bikeability')
+    generic_mini_plot(data, modes, 'bike lane perc', 'bikeability')
+    generic_mini_plot(data, modes, 'iteration', 'bikeability')
+    generic_mini_plot(data, modes, 'iteration', 'total cost')
+    generic_mini_plot(data, modes, 'total cost', 'total real length on bike lanes')
+    generic_mini_plot(data, modes, 'total cost', 'total felt length on bike lanes')
+
+
 def main():
     places = 'hh_part'
     # rev: False=Removing, True=Building
@@ -923,7 +982,7 @@ def main():
                                    w, cost_method))
 
 
-
+    plot_city_mini(places, modes)
     plot_algorithm(places, modes[0], file_format='png',slice_by='iteration')
 
     #for city in places:
