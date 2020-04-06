@@ -16,7 +16,7 @@ from math import ceil
 from helper.current_state_helper import calc_current_state, \
     get_street_type_cleaned
 
-from helper.data_maps_helper import load_graph_data
+from post_processing import load_graph_data
 
 
 def len_of_bikepath_by_type(ee, G, rev=False):
@@ -129,8 +129,10 @@ def plot_algorithm(place, mode, file_format='png',
         fig, ax = ox.plot_graph(G, edge_color=edge_color, fig_height=6,
                                 fig_width=6, dpi=300, show=False, close=False)
         fig.suptitle('Iteration: {}'.format(idx), fontsize='x-large')
-        plt.savefig('plots/evolution/{}-iter-{:04d}-mode-0101.{}'
-                    .format(place, i, file_format))
+        plt.savefig('plots/evolution/{}-iter-{:04d}-mode-{:d}{}{}{}.{}'
+                    .format(place, i,
+                            mode[0], mode[1], mode[3], mode[5],
+                            file_format))
         plt.close(fig)
 
 
@@ -763,8 +765,9 @@ def plot_city(place, modes):
 
     data = {}
     for m in modes:
-        data[m] = np.load('data/algorithm/output/{:}_data_mode_{:d}{:}.npy'
-                          .format(place, m[0], m[1]), allow_pickle=True)
+        data[m] = np.load('data/algorithm/output/{:}_data_mode_{:d}{:}{}{}.npy'
+                          .format(place, m[0], m[1], mode[3], mode[5]),
+                          allow_pickle=True)
 
     end = max([get_end(d[4], data_now[3], m[0]) for m, d in data.items()])
     print('Cut after: ', end)
@@ -779,8 +782,8 @@ def plot_city(place, modes):
         else:
             c[m] = c_norm[m[1]]
 
-    blp = {}
-    ba = {}
+    blp = {}  # bike lane percentage
+    ba = {}  # bikeability
     cost = {}
     nos = {}
     los = {}
@@ -920,7 +923,7 @@ def main():
 
 
 
-    plot_algorithm(places, modes, file_format='png',slice_by='iteration')
+    plot_algorithm(places, modes[0], file_format='png',slice_by='iteration')
 
     #for city in places:
      #   plot_city(city, modes)

@@ -101,15 +101,6 @@ def save_map(G, save_name):
     ox.save_graphml(G, filename='{}.graphml'.format(save_name))
 
 
-def load_graph_data(place, mode):
-    G = ox.load_graphml('{}.graphml'.format(place),
-                        folder='data/algorithm/input', node_type=int)
-    G = G.to_undirected()
-    data = np.load('data/algorithm/output/{}_data_mode_{}{}{}{}.npy'
-                   .format(place, int(mode[0]), mode[1], mode[3], mode[5]), allow_pickle=True)
-    return G, data
-
-
 def main():
     print("Please start via a city specific script.")
 
