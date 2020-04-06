@@ -6,6 +6,7 @@ from helper.algorithm_helper import *
 from helper.logger_helper import *
 from copy import deepcopy
 import time
+from random import sample
 
 
 def calc_trips(nkG, edge_dict, trips_dict):
@@ -237,7 +238,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
     rang = 0
     iter_log_counter = 0
     iter_log_nr_loop1 = iter_log_nr
-    run_times_loop = int(0.05 * len(edge_dict))
+    run_times_loop = int(2 * len(edge_dict))
 
     #HERE implement the loop for the conditional building/removing of bike paths
     while True:
@@ -300,10 +301,26 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
             # When budget is reached break loop and finish building process
             break
 
-        #if build_method == 'Best BA':7 6t
-            ##method to chose best bikeability
-            #ba = [1 -(i -min(trdt['all'])) /(max(trdt['all']) -min(trdt['all'])) for i in trdt['all']]
-
+        # random build mode
+        if build_method == 2:
+            if total_cost[-1] < total_budget*w:
+                action = True
+            elif total_cost[-1] > total_budget*(2-w):
+                action = False
+            else:
+                action = edge_action[-1]
+            # if we were building before...
+            if action:
+                # ...we continue to build
+                edge_candidates = {e_id for e_id, ed in edge_dict.items()
+                                   if not ed['bike lane']}
+                # sample returns a list of selected edges, and it is a list
+                # with only one element here
+                chosen_edge = sample(edge_candidates, 1)[0]
+            else:
+                # if we were not building, then the usual mode of removing
+                # the least loaded edge applies
+                chosen_edge = min_loaded_edge
 
         if chosen_edge == 'We are done!':
             # if there is no edge with a bike lane anymore this occurs

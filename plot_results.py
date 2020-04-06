@@ -913,7 +913,8 @@ def format_mode(mode):
     # how to display build methods
     bm_dict = {
         0: 'Monte Carlo',
-        1: 'MFT'
+        1: 'MFT',
+        2: 'heat'
     }
     flags.append(bm_dict[mode[3]])
     cost_dict = {

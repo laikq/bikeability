@@ -2,7 +2,7 @@ import itertools
 from clean_rawdata import clean_city
 from prep_cleandata import prep_city
 from run_algorithm import run_city
-from plot_results import plot_city, plot_algorithm
+from plot_results import plot_city, plot_algorithm, plot_city_mini
 
 # path to the call-a-bike csv
 big_csv = 'csv/db_all.csv'
@@ -25,12 +25,12 @@ logfile = 'log/algorithm'
 minmodes = [1]
 rev = [False]
 #budget choice
-total_budget = [20000]
+total_budget = [22000]
 
 # method choices
-#build method: 0=Monte Carlo , 1=MFT
-build_method = [0]
-w = [0.9]
+#build method: 0=Monte Carlo , 1=MFT, 2=random
+build_method = [0, 1, 2]
+w = [0.5]
 #cost method: 0 = equal, 1 = weighted
 cost_method = [0]
 
@@ -46,4 +46,5 @@ prep_city(city, which_result, save)
 run_city(save, modes, logfile, processes=4)
 #plot_city(save, modes)
 mode = modes[0]
+plot_city_mini(save, modes)
 plot_algorithm(save, mode, file_format='png',slice_by='iteration')
