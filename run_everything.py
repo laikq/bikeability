@@ -3,6 +3,10 @@ from clean_rawdata import clean_city
 from prep_cleandata import prep_city
 from run_algorithm import run_city
 from plot_results import plot_city, plot_algorithm, plot_city_mini
+from helper.logger_helper import log_to_file
+from helper.current_state_helper import calc_current_state
+import numpy as np
+import osmnx as ox
 
 # path to the call-a-bike csv
 big_csv = 'csv/db_all.csv'
@@ -22,10 +26,18 @@ logfile = 'log/algorithm'
 # minmode: 0=unweighted loads, 1=weighted by penalty,
 #          2=weighted by average trip length
 # rev: False=Removing, True=Building
-minmodes = [1]
+minmodes = [1, 2]
 rev = [False]
 #budget choice
-total_budget = [22000]
+trip_nbrs = np.load('data/algorithm/input/{}_demand.npy'.format(save),
+                    allow_pickle=True)[0]
+nxG = ox.load_graphml('{}.graphml'.format(save),
+                      folder='data/algorithm/input', node_type=int)
+nxG = nxG.to_undirected()
+data_now = calc_current_state(nxG, trip_nbrs)
+budget_now = data_now[1]
+total_budget = [0.7*budget_now]
+log_to_file(logfile, "Using budget = {}".format(total_budget))
 
 # method choices
 #build method: 0=Monte Carlo , 1=MFT, 2=random
