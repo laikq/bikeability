@@ -282,7 +282,7 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
             most_frequented_trip = get_most_travelled_trip(trips_dict, rang)
             if most_frequented_trip is not None:
                 # sort edges of current MFT regarding their load
-                sorted_edges = sort_edges_of_trip(most_frequented_trip, edge_dict, trips_dict)
+                sorted_edges = sort_edges_of_trip(most_frequented_trip, edge_dict, trips_dict, minmode)
                 # filter only these edges that still have a bike lane
                 sorted_edges_without_bikelane = [edge for edge in sorted_edges if not edge_dict[edge]['bike lane']]
 

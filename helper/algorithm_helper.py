@@ -295,7 +295,7 @@ def get_most_travelled_trip(trips_dict, rang):
     else:
         return sorted_trips[rang]
 
-def sort_edges_of_trip(trip, edge_dict, trips_dict):
+def sort_edges_of_trip(trip, edge_dict, trips_dict, minmode=1):
     """
     Sorts all edges of one trip regarding to the load of the edges
     :param trip: a single trip
@@ -308,8 +308,23 @@ def sort_edges_of_trip(trip, edge_dict, trips_dict):
     :rtype: list of tuple of integers
     """
     trip_edges = list(trips_dict[trip]['edges'])
-    trip_edges_load = {edge: edge_info['load'] for edge, edge_info in edge_dict.items()
+    if minmode == 0: 
+        trip_edges_load = {edge: edge_info['load'] for edge, edge_info in edge_dict.items()
                        if edge in trip_edges}
+    elif minmode == 1:
+        trip_edges_load = {edge: edge_info['load'] * edge_info['penalty']
+                      for edge, edge_info in edge_dict.items()
+                       if edge in trip_edges}
+    elif minmode == 2: 
+        edges_trip_length = {}
+        for edge in trip_edges:
+            length = []
+            for trip in edge_dict[edge]['trips']:
+                length += [trips_dict[trip]['length felt']] * \
+                          trips_dict[trip]['nbr of trips']
+            edges_trip_length[edge] = np.nan_to_num(np.average(length))
+        trip_edges_load = {edge: edge_dict[edge]['load'] * edges_trip_length[edge]
+                      for edge in trip_edges}
     sorted_edges = [k for k,v in sorted(trip_edges_load.items(), key = lambda item: -item[1])]
     return sorted_edges
 
