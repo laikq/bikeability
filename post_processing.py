@@ -25,6 +25,7 @@ def load_data(place, mode):
     d['gcbc size'] = data[9]
     d['edge action'] = data[10]
     d['bikeability'] = calculate_bikeability(d['total real distance traveled'])
+    d['felt bikeability'] = calculate_bikeability(d['total felt distance traveled'])
     d['iteration'] = list(range(len(d['bikeability'])))
     # "unpack" the dictionaries 'total real distance traveled' and 'total felt
     # distance traveled'
