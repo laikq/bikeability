@@ -77,8 +77,7 @@ def plot_algorithm(place, mode, file_format='png',
     will be chosen such that between plots, roughly the same amount of bike lane
     have been added or removed.
     """
-    G = load_graph(place, mode)
-    data = load_data(place, mode)
+    data, G = load_data(place, mode)
     edited_edges_nx = data['edited edges nx']
     bike_lane_perc = data['bike lane perc']
     action = data['edge action']
@@ -954,7 +953,7 @@ def plot_city_mini(place, modes):
     # data is a dictionary: mode -> data for mode
     data = {}
     for m in modes:
-        data[m] = load_data(place, m)
+        data[m], _ = load_data(place, m)
 
     # cost - bikeability - plot
     generic_mini_plot(data, modes, 'total cost', 'bikeability')

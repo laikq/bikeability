@@ -6,12 +6,17 @@ import osmnx as ox
 import numpy as np
 import networkx as nx
 import osmnx as ox
+from helper.current_state_helper import calc_empty_state
 
 
 def load_data(place, mode):
     data = np.load('data/algorithm/output/{}_data_mode_{:d}{}{}{}.npy'
                    .format(place, mode[0], mode[1], mode[3], mode[5]),
                    allow_pickle=True)
+    trip_nbrs = np.load('data/algorithm/input/{}_demand.npy'.format(place),
+                        allow_pickle=True)[0]
+    G = load_graph(place)
+    empty_state = calc_empty_state(G, trip_nbrs)
     d = {}
     d['edited edges'] = data[0]
     d['edited edges nx'] = data[1]
@@ -24,8 +29,12 @@ def load_data(place, mode):
     d['nbr of cbc'] = data[8]
     d['gcbc size'] = data[9]
     d['edge action'] = data[10]
-    d['bikeability'] = calculate_bikeability(d['total real distance traveled'])
-    d['felt bikeability'] = calculate_bikeability(d['total felt distance traveled'])
+    d['bikeability'] = calculate_bikeability(
+        d['total real distance traveled'],
+        empty_state=empty_state['total real distance traveled'])
+    d['felt bikeability'] = calculate_bikeability(
+        d['total felt distance traveled'],
+        empty_state=empty_state['total felt distance traveled'])
     d['iteration'] = list(range(len(d['bikeability'])))
     # "unpack" the dictionaries 'total real distance traveled' and 'total felt
     # distance traveled'
@@ -46,10 +55,10 @@ def load_data(place, mode):
             # val is a list
             d_key = key.replace('total length', 'total ' + rf + ' length')
             d[d_key] = val
-    return d
+    return d, G
 
 
-def load_graph(place, mode):
+def load_graph(place):
     G = ox.load_graphml('{}.graphml'.format(place),
                         folder='data/algorithm/input', node_type=int)
     G = G.to_undirected()
@@ -71,33 +80,45 @@ def apply_edge_operations(G, edited_edges, edge_action):
     return G
 
 
-def calculate_bikeability(total_real_distance_traveled):
+def calculate_bikeability(total_distance_traveled, empty_state=None):
     """
     Calculate the bikeability.
-    :param total_real_distance_traveled: a list (each entry is generated in one
+    :param total_distance_traveled: a list (each entry is generated in one
     iteration of the algorithm) of dictionaries, which each save the total
     length cyclists have to drive on each street type. Note: 'total length on
     street' is the sum of 'total length on
     {primary|secondary|tertiary|residential}' and 'total length on bike lane' is
     'total length on all' minus 'total length on street'.
+    :param empty_state: If not None, this argument is used to "norm" the
+    bikeability. In runs where the algorithm does not hit a "no bike
+    lanes"-network, the bikeability gets to zero for a network which might have
+    some good bike lanes. empty_state is assumed to be the entry
+    'total_distance_traveled' of a street network with no bike lanes (see also
+    calc_empty_state of current_state_helper.py)
     """
+    if empty_state is not None:
+        tdt = total_distance_traveled + [empty_state]
+    else:
+        tdt = total_distance_traveled
     max_dist_on_all = max({t['total length on all']
-                           for t in total_real_distance_traveled})
+                           for t in tdt})
     norm_dist_on_all = [t['total length on all'] / max_dist_on_all
-                        for t in total_real_distance_traveled]
+                        for t in tdt]
     max_norm = max(norm_dist_on_all)
     min_norm = min(norm_dist_on_all)
     bikeability = [1 - (t - min_norm) / (max_norm - min_norm)
                    for t in norm_dist_on_all]
-    return bikeability
+    if empty_state is not None:
+        return bikeability[:-1]  # cut off last element
+    else:
+        return bikeability
 
 
 def get_best_graph(place, mode, budget=1000):
     """
     Return the networkx graph G with the best bikeability.
     """
-    G = load_graph(place, mode)
-    data = load_data(place, mode)
+    data, G = load_data(place, mode)
     bikeability = calculate_bikeability(data['total real distance traveled'])
     # set bikeability to 0 for all configurations that cost more than our budget
     # -- because bike paths are worth nothing if they can't be built!

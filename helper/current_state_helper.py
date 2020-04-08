@@ -558,3 +558,49 @@ def calc_current_state(nxG, trip_nbrs):
                      total_real_distance_traveled,
                      total_felt_distance_traveled, nbr_on_street])
     return data
+
+
+def calc_empty_state(nxG, trip_nbrs):
+    """
+    Calculates the observables for a state with no bike lanes anywhere.
+    :param nxG: graph to calculate the s.p. in.
+    :type nxG: networkx graph
+    :param trip_nbrs: demand dict
+    :type trip_nbrs: dict
+    :return:
+    """
+    types = ['primary', 'secondary', 'tertiary', 'residential', 'bike lane']
+    len_on_type = {t: 0 for t in types}
+    penalties = {'primary': 7, 'secondary': 2.4, 'tertiary': 1.4,
+                 'residential': 1.1}
+    trips_dict = {t_id: {'nbr of trips': nbr_of_trips, 'nodes': [],
+                         'edges': [], 'length real': 0, 'length felt': 0,
+                         'real length on types': len_on_type,
+                         'felt length on types': len_on_type,
+                         'on street': False}
+                  for t_id, nbr_of_trips in trip_nbrs.items()}
+    edge_dict = {edge: {'felt length': get_street_length(nxG, edge),
+                        'real length': get_street_length(nxG, edge),
+                        'street type': get_street_type_cleaned(nxG, edge),
+                        'penalty': penalties[
+                            get_street_type_cleaned(nxG, edge)],
+                        'speed limit': get_speed_limit(nxG, edge),
+                        'bike lane': False, 'load': 0, 'trips': []}
+                 for edge in nxG.edges()}
+
+    for edge, edge_info in edge_dict.items():
+        edge_info['felt length'] *= edge_info['penalty']
+        nxG[edge[0]][edge[1]][0]['length'] *= edge_info['penalty']
+
+    calc_trips(nxG, edge_dict, trips_dict)
+
+    # Initialise lists
+    data = {}
+    data['total cost'] = 0
+    data['bike lane perc'] = bike_lane_percentage(edge_dict)
+    data['total real distance traveled'] = total_len_on_types(trips_dict, 'real')
+    data['total felt distance traveled'] = total_len_on_types(trips_dict, 'felt')
+    data['nbr on street'] = nbr_of_trips_on_street(trips_dict)
+
+    # Save data of this run to data array
+    return data

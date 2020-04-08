@@ -36,7 +36,7 @@ nxG = ox.load_graphml('{}.graphml'.format(save),
 nxG = nxG.to_undirected()
 data_now = calc_current_state(nxG, trip_nbrs)
 budget_now = data_now[1]
-total_budget = [0.7*budget_now]
+total_budget = [0.25*budget_now]
 log_to_file(logfile, "Using budget = {}".format(total_budget))
 
 # method choices
