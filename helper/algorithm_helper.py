@@ -258,6 +258,13 @@ def get_minimal_loaded_edge(edge_dict, trips_dict, minmode=0, rev=False):
             edges_trip_length[edge] = np.nan_to_num(np.average(length))
         edges_load = {edge: edge_info['load'] * edges_trip_length[edge]
                       for edge, edge_info in edges.items()}
+    elif minmode == 3:
+        if rev:
+            edges_load = {edge: edge_info['load'] * (1 / (edge_info['penalty'] - 1))
+                          for edge, edge_info in edges.items()}
+        else:
+            edges_load = {edge: edge_info['load'] * (edge_info['penalty'] - 1)
+                          for edge, edge_info in edges.items()}
     else:
         print('Minmode has to be chosen. Aborting.')
         edges_load = {}
@@ -325,6 +332,10 @@ def sort_edges_of_trip(trip, edge_dict, trips_dict, minmode=1):
             edges_trip_length[edge] = np.nan_to_num(np.average(length))
         trip_edges_load = {edge: edge_dict[edge]['load'] * edges_trip_length[edge]
                       for edge in trip_edges}
+    elif minmode == 3:
+        trip_edges_load = {edge: edge_info['load'] * (edge_info['penalty'] - 1)
+                      for edge, edge_info in edge_dict.items()
+                       if edge in trip_edges}
     sorted_edges = [k for k,v in sorted(trip_edges_load.items(), key = lambda item: -item[1])]
     return sorted_edges
 
