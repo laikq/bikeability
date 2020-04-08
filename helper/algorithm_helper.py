@@ -297,7 +297,7 @@ def get_most_travelled_trip(trips_dict, rang):
     """
     trip_nbrs = {trip: trip_info['nbr of trips'] for trip, trip_info in trips_dict.items()}
     sorted_trips = [k for k, v in sorted(trip_nbrs.items(), key=lambda item: -item[1])]
-    if len(sorted_trips) >= rang:
+    if rang >= len(sorted_trips):
         return None
     else:
         return sorted_trips[rang]
