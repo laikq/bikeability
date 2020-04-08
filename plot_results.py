@@ -16,7 +16,8 @@ from math import ceil
 from helper.current_state_helper import calc_current_state, \
     get_street_type_cleaned
 
-from post_processing import load_graph, calculate_bikeability, load_data
+from post_processing import load_graph, calculate_bikeability, load_data, \
+    format_mode
 
 
 def len_of_bikepath_by_type(ee, G, rev=False):
@@ -77,7 +78,7 @@ def plot_algorithm(place, mode, file_format='png',
     will be chosen such that between plots, roughly the same amount of bike lane
     have been added or removed.
     """
-    data, G = load_data(place, mode)
+    data, G, _ = load_data(place, mode)
     edited_edges_nx = data['edited edges nx']
     bike_lane_perc = data['bike lane perc']
     action = data['edge action']
@@ -912,26 +913,6 @@ def compare_cities(cities, mode, color):
     # plt.show()
 
 
-def format_mode(mode):
-    flags = []
-    if mode[0]:
-        flags.append('rev')
-    flags.append('minmode ' + str(mode[1]))  # minmode
-    # how to display build methods
-    bm_dict = {
-        0: 'Monte Carlo',
-        1: 'MFT',
-        2: 'heat'
-    }
-    flags.append(bm_dict[mode[3]])
-    cost_dict = {
-        0: 'equal cost',
-        1: 'weighted cost'
-    }
-    flags.append(cost_dict[mode[5]])
-    return ', '.join(flags)
-
-
 def generic_mini_plot(data, modes, x_label, y_label, save=True):
     """
     Do a not-too-fancy plot of data and modes.
@@ -961,7 +942,7 @@ def plot_city_mini(place, modes):
     # data is a dictionary: mode -> data for mode
     data = {}
     for m in modes:
-        data[m], _ = load_data(place, m)
+        data[m], _, _ = load_data(place, m)
 
     # cost - bikeability - plot
     generic_mini_plot(data, modes, 'total cost', 'bikeability')
@@ -991,7 +972,8 @@ def main():
 
 
     plot_city_mini(places, modes)
-    plot_algorithm(places, modes[0], file_format='png',slice_by='iteration')
+    for mode in modes:
+        plot_algorithm(places, mode, file_format='png',slice_by='iteration')
 
     #for city in places:
      #   plot_city(city, modes)

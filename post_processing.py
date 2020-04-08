@@ -9,6 +9,26 @@ import osmnx as ox
 from helper.current_state_helper import calc_empty_state
 
 
+def format_mode(mode):
+    flags = []
+    if mode[0]:
+        flags.append('rev')
+    flags.append('minmode ' + str(mode[1]))  # minmode
+    # how to display build methods
+    bm_dict = {
+        0: 'Monte Carlo',
+        1: 'MFT',
+        2: 'heat'
+    }
+    flags.append(bm_dict[mode[3]])
+    cost_dict = {
+        0: 'equal cost',
+        1: 'weighted cost'
+    }
+    flags.append(cost_dict[mode[5]])
+    return ', '.join(flags)
+
+
 def load_data(place, mode):
     data = np.load('data/algorithm/output/{}_data_mode_{:d}{}{}{}.npy'
                    .format(place, mode[0], mode[1], mode[3], mode[5]),
@@ -55,7 +75,7 @@ def load_data(place, mode):
             # val is a list
             d_key = key.replace('total length', 'total ' + rf + ' length')
             d[d_key] = val
-    return d, G
+    return d, G, trip_nbrs
 
 
 def load_graph(place):
@@ -114,17 +134,50 @@ def calculate_bikeability(total_distance_traveled, empty_state=None):
         return bikeability
 
 
-def get_best_graph(place, mode, budget=1000):
+def get_best_graph(place, mode):
     """
     Return the networkx graph G with the best bikeability.
     """
-    data, G = load_data(place, mode)
+    data, G, _ = load_data(place, mode)
     bikeability = calculate_bikeability(data['total real distance traveled'])
     # set bikeability to 0 for all configurations that cost more than our budget
     # -- because bike paths are worth nothing if they can't be built!
+    budget = mode[2]
     bikeability = [0 if cost > budget else ba
                    for cost, ba in zip(data['total cost'], bikeability)]
     max_bikeability_index = np.argmax(bikeability)
     apply_edge_operations(G, data['edited edges'][:max_bikeability_index+1],
                           data['edge action'][:max_bikeability_index+1])
     return G
+
+
+def first_road_built_index(data):
+    """
+    Determine the iteration in which the first road was built. This is useful to
+    differentiate if the optimum was reached by the classic minimization
+    strategy, or by the building of roads later.
+    """
+    idcs = np.nonzero(data['edge action'])[0]
+    if len(idcs) == 0:
+        return len(data['edge action'])
+    return np.min(np.nonzero(data['edge action'])[0])
+
+
+def show_summary(place, modes):
+    """
+    For all modes, print a quick summary (which bikeability they can reach with
+    the given budget).
+    """
+    for mode in modes:
+        data, G, _ = load_data(place, mode)
+        print("Mode: {}, budget {:.02f}, first bike lane built @ iter. {} (total {})"
+              .format(format_mode(mode), mode[2], first_road_built_index(data), len(data['edge action'])))
+        for ba in ['bikeability', 'felt bikeability']:
+            # np.where sets bikeability to zero if the total cost is greater
+            # than mode[2]
+            bikeability = np.where(np.array(data['total cost']) <= mode[2],
+                                   data[ba], 0)
+            max_ba_idx = np.argmax(bikeability)
+            max_ba = data[ba][max_ba_idx]
+            print("  max {}: {:.01f}% @ iter. {}"
+                  .format(ba, max_ba*100, max_ba_idx))
