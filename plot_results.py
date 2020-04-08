@@ -62,7 +62,7 @@ def coord_transf(x, y, xmin=-0.05, xmax=1.05, ymin=-0.05, ymax=1.05):
 
 
 def plot_algorithm(place, mode, file_format='png',
-                   slice_by='iteration'):
+                   slice_by='iteration', budget=None):
     """
     Plot evolution of bike lanes, in the order the algorithm added / removed
     them.
@@ -76,6 +76,8 @@ def plot_algorithm(place, mode, file_format='png',
     total 100 plots result. If select_by='bike lane delta', plotted iterations
     will be chosen such that between plots, roughly the same amount of bike lane
     have been added or removed.
+    :param budget: If given, draw a frame with the best bikeability and cost
+    below the given budget. Uses 'felt bikeability'
     """
     data, G = load_data(place, mode)
     edited_edges_nx = data['edited edges nx']
@@ -91,6 +93,14 @@ def plot_algorithm(place, mode, file_format='png',
 
     if slice_by == 'iteration':
         plot_at = np.linspace(0, num_iters - 1, num=101, dtype=np.int64)
+
+    if budget is not None:
+        # get iteration where bikeability is maximal and cost < budget
+        bikeability = [0 if cost > budget else ba
+                       for cost, ba in zip(data['total cost'],
+                                           data['felt bikeability'])]
+        ba_idx = np.argmax(bikeability)
+        plot_at = np.append(plot_at, ba_idx)
 
     color_dict = {
         'present': '#0000FF',
