@@ -274,11 +274,10 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
             else:
                 # if we don't build, we remove the least loaded street
                 chosen_edge = min_loaded_edge
-                action = False
-                
-        # quit the building method after a certain amount of iterations
-        if (iter_log_nr-iter_log_nr_loop1)*K > run_times_loop:
-            break
+                action = False   
+            # quit the building method after a certain amount of iterations
+            if (iter_log_nr-iter_log_nr_loop1)*K > run_times_loop:
+                break
         
         # Method MFT (most frequented trip)
         if build_method == 1 and (total_budget > get_total_cost(edge_dict,
@@ -329,6 +328,9 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                 # if we were not building, then the usual mode of removing
                 # the least loaded edge applies
                 chosen_edge = min_loaded_edge
+            # quit the building method after a certain amount of iterations
+            if (iter_log_nr-iter_log_nr_loop1)*K > run_times_loop:
+                break
         
         # go 2 forward, go 1 backward
         if build_method == 3:
