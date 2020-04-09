@@ -302,7 +302,6 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                     action = True
             else:
                 chosen_edge = 'We are done!'
-        
         if build_method == 1 and (total_budget < get_total_cost(edge_dict,
                                         street_cost, False, cost_method)):
             # When budget is reached break loop and finish building process
@@ -337,16 +336,16 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
             # define break
             if total_cost[-1] > total_budget: break
             # define action
-            if edge_action[-1] and step_counter < step_size:
+            if edge_action[-1] and step_counter < 2*step_size:
                 action = True
                 step_counter += 1
-            elif edge_action[-1] and step_counter >= step_size:
+            elif edge_action[-1] and step_counter >= 2*step_size:
                 action = False
                 step_counter = 0
-            elif not edge_action[-1] and step_counter < int(step_size/2):
+            elif not edge_action[-1] and step_counter < step_size:
                 action = False 
                 step_counter += 1
-            elif not edge_action[-1] and step_counter >= int(step_size/2):
+            elif not edge_action[-1] and step_counter >= step_size:
                 action = True
                 step_counter = 0
             # define edge
