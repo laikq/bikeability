@@ -239,6 +239,11 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
     iter_log_counter = 0
     iter_log_nr_loop1 = iter_log_nr
     run_times_loop = int(2 * len(edge_dict))
+    
+    if build_method == 3: 
+        step_size = 20
+        step_counter = step_size
+        
 
     #HERE implement the loop for the conditional building/removing of bike paths
     while True:
@@ -324,7 +329,30 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                 # if we were not building, then the usual mode of removing
                 # the least loaded edge applies
                 chosen_edge = min_loaded_edge
-
+        
+        # go 2 forward, go 1 backward
+        if build_method == 3:
+            # define break
+            if total_cost[-1] > total_budget: break
+            # define action
+            if edge_action[-1] and step_counter < step_size:
+                action = True
+                step_counter += 1
+            elif edge_action[-1] and step_counter >= step_size:
+                action = False
+                step_counter = 0
+            elif not edge_action[-1] and step_counter < int(step_size/2):
+                action = False 
+                step_counter += 1
+            elif not edge_action[-1] and step_counter >= int(step_size/2):
+                action = True
+                step_counter = 0
+            # define edge
+            if action:
+                chosen_edge = max_loaded_street
+            else: chosen_edge = min_loaded_edge
+            
+        
         if chosen_edge == 'We are done!':
             # if there is no edge with a bike lane anymore this occurs
             break
