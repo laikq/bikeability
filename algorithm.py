@@ -149,9 +149,28 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
     iter_log_counter = 0    #log every 100 iterations
     iter_log_nr = 0
 
+    loaded_data = load_minimization_data(place, rev, minmode, w, total_budget)
+    if loaded_data is not None:
+        # unpack now the returned tuple
+        loaded_data, lpath = loaded_data
+        edited_edges = loaded_data[0]
+        edited_edges_nx = loaded_data[1]
+        total_cost = loaded_data[2]
+        bike_lane_perc = loaded_data[3]
+        total_real_distance_traveled = loaded_data[4]
+        total_felt_distance_traveled = loaded_data[5]
+        nbr_on_street = loaded_data[6]
+        len_saved = loaded_data[7]
+        nbr_of_cbc = loaded_data[8]
+        gcbc_size = loaded_data[9]
+        edge_action = loaded_data[10]
+        log_to_file(file=logfile, txt='Loaded data of file {} ({} entries)'
+                    .format(lpath.name, len(edited_edges)))
+
     #initial building/removal of paths
-    while (rev==(get_total_cost(edge_dict, street_cost,False,cost_method) < (2-w)*total_budget)) \
-           or (rev == (get_total_cost(edge_dict, street_cost, False,cost_method) < w*total_budget)):
+    while ((rev==(get_total_cost(edge_dict, street_cost,False,cost_method) < (2-w)*total_budget))
+           or (rev == (get_total_cost(edge_dict, street_cost, False,cost_method) < w*total_budget))) \
+           and loaded_data is None:
         #condition for the while loop:
         # if rev:
         #     #build bike paths till cost above (2-w)*budget
@@ -320,9 +339,13 @@ def edit_network(nkG, nkG_edited, edge_dict, trips_dict, nk2nx_nodes,
                 # ...we continue to build
                 edge_candidates = {e_id for e_id, ed in edge_dict.items()
                                    if not ed['bike lane']}
-                # sample returns a list of selected edges, and it is a list
-                # with only one element here
-                chosen_edge = sample(edge_candidates, 1)[0]
+                if len(edge_candidates) == 0:
+                    action = False
+                    chosen_edge = min_loaded_edge
+                else:
+                    # sample returns a list of selected edges, and it is a list
+                    # with only one element here
+                    chosen_edge = sample(edge_candidates, 1)[0]
             else:
                 # if we were not building, then the usual mode of removing
                 # the least loaded edge applies

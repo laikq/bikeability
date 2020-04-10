@@ -5,6 +5,49 @@ This module includes usefull helper functions for working with networkx.
 import networkit as nk
 import networkx as nx
 import numpy as np
+from pathlib import Path
+import re
+
+
+def filename_matches_mode(path, place, rev, minmode):
+    """
+    For a given Path object, return True iff the filename matches place, rev,
+    and minmode. Example:
+
+        filename_matches_mode(Path('data/algorithm/output/hh_data_mode_0010.npy'), 
+            place='hh', rev=False, minmode=0) == True
+    """
+    m = re.match(r'{}_data_mode_{:d}{:d}\d\d.npy'.format(place, rev, minmode),
+                 path.name)
+    return m is not None
+
+
+def load_minimization_data(place, rev, minmode, w, budget):
+    """
+    For the given place and mode, check whether a file containing results for
+    the given rev and minmode already exists. If it does, load its
+    contents. Only return entries up to the point where the minimization while
+    loop in run_algorithm would have breaked -- that is, until (rev == cost <
+    (2-w)*budget or rev == cost < w*budget). Return None if no data could be
+    loaded. Return the data and the file name used for data loading if data was
+    successfully loaded.
+    """
+    data_dir = Path('data/algorithm/output')
+    candidates = filter(lambda p: filename_matches_mode(p, place, rev, minmode),
+                        data_dir.iterdir())
+    candidates = list(candidates)
+    if len(candidates) == 0:
+        return None
+    # any candidate will do, so we take the first one
+    data = np.load(candidates[0], allow_pickle=True)
+    cost = np.array(data[2])
+    # this is the criterion used in the while-loop in run_algorithm
+    condition = np.logical_or(rev == (cost < (2-w)*budget),
+                              rev == (cost < w*budget))
+    # get first index where condition is False
+    fidx = np.min(np.nonzero(np.logical_not(condition))[0])
+    data = data[:fidx+1]
+    return data, candidates[0]
 
 
 def get_street_type(G, edge, nk2nx=False):
