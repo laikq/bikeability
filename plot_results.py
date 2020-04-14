@@ -17,7 +17,9 @@ from helper.current_state_helper import calc_current_state, \
     get_street_type_cleaned
 
 from post_processing import load_graph, calculate_bikeability, load_data, \
-    format_mode
+    format_mode, first_road_built_index, get_best_graph
+
+from helper.plot_helper import set_limits_from_data
 
 
 def len_of_bikepath_by_type(ee, G, rev=False):
@@ -62,6 +64,18 @@ def coord_transf(x, y, xmin=-0.05, xmax=1.05, ymin=-0.05, ymax=1.05):
     return (x - xmin) / (xmax - xmin), (y - ymin) / (ymax - ymin)
 
 
+def plot_best_graph(place, mode):
+    G, idx = get_best_graph(place, mode)
+    edge_color = ['#0000FF' if bl else '#999999'
+                  for _, _, bl in G.edges.data('bike lane')]
+    fig, ax = ox.plot_graph(G, edge_color=edge_color, fig_height=6,
+                            fig_width=6, dpi=300, show=False, close=False)
+    fig.suptitle('Iteration: {}'.format(idx), fontsize='x-large')
+    plt.savefig('plots/evolution/{}-iter-result-mode-{:d}{}{}{}.png'
+                .format(place, mode[0], mode[1], mode[3], mode[5]))
+    plt.close(fig)
+
+
 def plot_algorithm(place, mode, file_format='png',
                    slice_by='iteration'):
     """
@@ -78,6 +92,7 @@ def plot_algorithm(place, mode, file_format='png',
     will be chosen such that between plots, roughly the same amount of bike lane
     have been added or removed.
     """
+    plot_best_graph(place, mode)
     data, G, _ = load_data(place, mode)
     edited_edges_nx = data['edited edges nx']
     bike_lane_perc = data['bike lane perc']
@@ -137,7 +152,8 @@ def plot_algorithm(place, mode, file_format='png',
                       in G.edges.data('bike lane')]
         fig, ax = ox.plot_graph(G, edge_color=edge_color, fig_height=6,
                                 fig_width=6, dpi=300, show=False, close=False)
-        fig.suptitle('Iteration: {}'.format(idx), fontsize='x-large')
+        fig.suptitle('Iteration: {}, Mode: {}'.format(idx, format_mode(mode)),
+                     fontsize='x-large')
         plt.savefig('plots/evolution/{}-iter-{:04d}-mode-{:d}{}{}{}.{}'
                     .format(place, i,
                             mode[0], mode[1], mode[3], mode[5],
@@ -775,7 +791,7 @@ def plot_city(place, modes):
     data = {}
     for m in modes:
         data[m] = np.load('data/algorithm/output/{:}_data_mode_{:d}{:}{}{}.npy'
-                          .format(place, m[0], m[1], mode[3], mode[5]),
+                          .format(place, m[0], m[1], m[3], m[5]),
                           allow_pickle=True)
 
     end = max([get_end(d[4], data_now[3], m[0]) for m, d in data.items()])
@@ -913,23 +929,41 @@ def compare_cities(cities, mode, color):
     # plt.show()
 
 
-def generic_mini_plot(data, modes, x_label, y_label, save=True):
+def generic_mini_plot(data, modes, x_label, y_label, save=True, zoom=False):
     """
     Do a not-too-fancy plot of data and modes.
     :param x_label: the index for data to use for the x axis
     :param y_label: the index for data to use for the y axis
+    :param zoom: if True, zoom into the data generated during the build phase.
     :return: fig, ax
     """
     fig, ax = plt.subplots()
-    for m in modes:
-        ax.plot(data[m][x_label], data[m][y_label], label=format_mode(m), alpha=0.8)
-    ax.set_xlabel(x_label)
-    ax.set_ylabel(y_label)
+    for idx, m in enumerate(modes):
+        xydata = data[m][x_label], data[m][y_label]
+        if zoom:
+            split_idx = first_road_built_index(data[m])
+            zoom_data = [d[split_idx:] for d in xydata]
+            other_data = [d[:split_idx] for d in xydata]
+            ax.plot(*zoom_data, label=format_mode(m), alpha=0.9,
+                    color='C'+str(idx))
+            # data before build phase is plotted in a lighter color
+            ax.plot(*other_data, alpha=0.4, color='C'+str(idx))
+        else:
+            ax.plot(*xydata, alpha=0.8, label=format_mode(m))
+    if zoom:
+        zoom_xdata = np.concatenate([data[m][x_label][split_idx:]
+                                     for m in modes])
+        zoom_ydata = np.concatenate([data[m][y_label][split_idx:]
+                                     for m in modes])
+        set_limits_from_data(ax, zoom_xdata, zoom_ydata)
+    ax.set_xlabel(x_label.capitalize())
+    ax.set_ylabel(y_label.capitalize())
     ax.legend()
     if save:
         fname = ('plots/' +
                  x_label.replace(' ', '_') + '-' +
-                 y_label.replace(' ', '_') + '.png')
+                 y_label.replace(' ', '_') +
+                 ('-zoom' if zoom else '') + '.png')
         fig.savefig(fname)
         plt.close(fig)
     return fig, ax

@@ -18,7 +18,8 @@ def format_mode(mode):
     bm_dict = {
         0: 'Monte Carlo',
         1: 'MFT',
-        2: 'heat'
+        2: 'Heat',
+        3: '2f1b'
     }
     flags.append(bm_dict[mode[3]])
     cost_dict = {
@@ -146,9 +147,9 @@ def get_best_graph(place, mode):
     bikeability = [0 if cost > budget else ba
                    for cost, ba in zip(data['total cost'], bikeability)]
     max_bikeability_index = np.argmax(bikeability)
-    apply_edge_operations(G, data['edited edges'][:max_bikeability_index+1],
+    apply_edge_operations(G, data['edited edges nx'][:max_bikeability_index+1],
                           data['edge action'][:max_bikeability_index+1])
-    return G
+    return G, max_bikeability_index
 
 
 def first_road_built_index(data):
